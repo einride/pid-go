@@ -15,10 +15,10 @@ const (
 func TestSaturatedController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
 	c := &SaturatedPID{
-		Tc:        1,
-		Kp:        1,
-		MinOutput: -10,
-		MaxOutput: 10,
+		CutOffFrequency:  1,
+		ProportionalGain: 1,
+		MinOutput:        -10,
+		MaxOutput:        10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
@@ -28,7 +28,7 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 		{
 			measuredOutput: 0.0,
 			reference:      1.0,
-			expectedState:  saturatedPIDState{e: 1.0, u: c.Kp * 1.0, eI: 1.0},
+			expectedState:  saturatedPIDState{e: 1.0, u: c.ProportionalGain * 1.0, eI: 1.0},
 		},
 		{
 			measuredOutput: 0.0,
@@ -52,13 +52,13 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 func TestSaturatedController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
 	c := &SaturatedPID{
-		Tc:        1,
-		Tv:        0.01,
-		Kp:        1,
-		Ki:        10,
-		Kw:        10,
-		MinOutput: -10,
-		MaxOutput: 10,
+		CutOffFrequency:  1,
+		DerivativeGain:   0.01,
+		ProportionalGain: 1,
+		IntegrationGain:  10,
+		WindUp:           10,
+		MinOutput:        -10,
+		MaxOutput:        10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
@@ -94,10 +94,10 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 func TestSaturatedPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
 	c := &SaturatedPID{
-		Tc:        1,
-		Ki:        10,
-		MinOutput: -10,
-		MaxOutput: 10,
+		CutOffFrequency: 1,
+		IntegrationGain: 10,
+		MinOutput:       -10,
+		MaxOutput:       10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64

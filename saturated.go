@@ -15,20 +15,20 @@ import (
 // (https://drive.google.com/drive/u/0/folders/15lvDR3EwdNJOU402h-gINsvRl01OzY4T)
 
 // Controller tuning parameters
-// Tv - D part gain
-// Tc - D part low-pass filter time constant => cut-off frequency 1/Tc
-// Kp - P part gain
-// Ki - I part gain
-// Kw - Anti-windup tracking gain
+// DerivativeGain - D part gain
+// CutOffFrequency - D part low-pass filter time constant => cut-off frequency 1/CutOffFrequency
+// ProportionalGain - P part gain
+// IntegrationGain - I part gain
+// WindUp - Anti-windup tracking gain
 type SaturatedPID struct {
-	Tv        float64
-	Tc        float64
-	Kp        float64
-	Ki        float64
-	Kw        float64
-	MaxOutput float64
-	MinOutput float64
-	state     saturatedPIDState
+	DerivativeGain   float64
+	CutOffFrequency  float64
+	ProportionalGain float64
+	IntegrationGain  float64
+	WindUp           float64
+	MaxOutput        float64
+	MinOutput        float64
+	state            saturatedPIDState
 }
 
 type saturatedPIDState struct {
@@ -45,12 +45,12 @@ func (c *SaturatedPID) Reset() {
 
 func (c *SaturatedPID) Update(target float64, actual float64, ff float64, dt time.Duration) float64 {
 	e := target - actual
-	uP := e * c.Kp
-	uI := c.state.eI*c.Ki*dt.Seconds() + c.state.uI
-	uD := ((c.Tv/c.Tc)*(e-c.state.e) + c.state.uD) / (dt.Seconds()/c.Tc + 1)
+	uP := e * c.ProportionalGain
+	uI := c.state.eI*c.IntegrationGain*dt.Seconds() + c.state.uI
+	uD := ((c.DerivativeGain/c.CutOffFrequency)*(e-c.state.e) + c.state.uD) / (dt.Seconds()/c.CutOffFrequency + 1)
 	uV := uP + uI + uD + ff
 	c.state.u = math.Max(c.MinOutput, math.Min(c.MaxOutput, uV))
-	c.state.eI = e + c.Kw*(c.state.u-uV)
+	c.state.eI = e + c.WindUp*(c.state.u-uV)
 	c.state.uI = uI
 	c.state.uD = uD
 	c.state.e = e

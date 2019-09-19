@@ -14,31 +14,31 @@ const (
 
 func TestSaturatedController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
-	c := &SaturatedPID{
-		CutOffFrequency:  1,
-		ProportionalGain: 1,
-		MinOutput:        -10,
-		MaxOutput:        10,
+	c := &SaturatedController{
+		LowPassTimeConstant: 1 * time.Second,
+		ProportionalGain:    1,
+		MinOutput:           -10,
+		MaxOutput:           10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
-		expectedState  saturatedPIDState
+		expectedState  saturatedState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      1.0,
-			expectedState:  saturatedPIDState{e: 1.0, u: c.ProportionalGain * 1.0, eI: 1.0},
+			expectedState:  saturatedState{e: 1.0, u: c.ProportionalGain * 1.0, eI: 1.0},
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      50.0,
-			expectedState:  saturatedPIDState{e: 50.0, u: c.MaxOutput, eI: 50.0},
+			expectedState:  saturatedState{e: 50.0, u: c.MaxOutput, eI: 50.0},
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      -50.0,
-			expectedState:  saturatedPIDState{e: -50.0, u: c.MinOutput, eI: -50.0},
+			expectedState:  saturatedState{e: -50.0, u: c.MinOutput, eI: -50.0},
 		},
 	} {
 		tt := tt
@@ -51,24 +51,24 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 
 func TestSaturatedController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
-	c := &SaturatedPID{
-		CutOffFrequency:  1,
-		DerivativeGain:   0.01,
-		ProportionalGain: 1,
-		IntegrationGain:  10,
-		WindUp:           10,
-		MinOutput:        -10,
-		MaxOutput:        10,
+	c := &SaturatedController{
+		LowPassTimeConstant: 1 * time.Second,
+		DerivativeGain:      0.01,
+		ProportionalGain:    1,
+		IntegralGain:        10,
+		AntiWindUpGain:      10,
+		MinOutput:           -10,
+		MaxOutput:           10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
-		expectedState  saturatedPIDState
+		expectedState  saturatedState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
-			expectedState: saturatedPIDState{
+			expectedState: saturatedState{
 				e:  0.0,
 				u:  5.0,
 				eI: 0.0,
@@ -93,23 +93,23 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 
 func TestSaturatedPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
-	c := &SaturatedPID{
-		CutOffFrequency: 1,
-		IntegrationGain: 10,
-		MinOutput:       -10,
-		MaxOutput:       10,
+	c := &SaturatedController{
+		LowPassTimeConstant: 1 * time.Second,
+		IntegralGain:        10,
+		MinOutput:           -10,
+		MaxOutput:           10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
 		feedForward    float64
-		expectedState  saturatedPIDState
+		expectedState  saturatedState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
 			feedForward:    2.0,
-			expectedState: saturatedPIDState{
+			expectedState: saturatedState{
 				e:  0.0,
 				u:  5.0,
 				uI: 5.0 - 2.0,
@@ -119,7 +119,7 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 			measuredOutput: 0.0,
 			reference:      5.0,
 			feedForward:    15.0,
-			expectedState: saturatedPIDState{
+			expectedState: saturatedState{
 				e:  0.0,
 				u:  5.0,
 				uI: 5.0 - 15.0,
@@ -143,8 +143,8 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 
 func TestSaturatedController_Reset(t *testing.T) {
 	// Given a SaturatedPIDController with stored values not equal to 0
-	c := &SaturatedPID{}
-	c.state = saturatedPIDState{
+	c := &SaturatedController{}
+	c.state = saturatedState{
 		e:  5,
 		uI: 5,
 		uD: 5,
@@ -154,5 +154,5 @@ func TestSaturatedController_Reset(t *testing.T) {
 	// When resetting stored values
 	c.Reset()
 	// Then
-	require.Equal(t, saturatedPIDState{}, c.state)
+	require.Equal(t, saturatedState{}, c.state)
 }

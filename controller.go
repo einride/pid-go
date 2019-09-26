@@ -8,3 +8,10 @@ type Controller interface {
 	Update(targetValue float64, actualValue float64, ff float64, dt time.Duration) float64
 	Reset()
 }
+
+// BumplessController represents a PID controller with feed forward term and bumpless transfer between
+// PID control and other controllers.
+type BumplessController interface {
+	Update(targetValue float64, actualValue float64, ff float64, actualInput float64, dt time.Duration) float64
+	Reset()
+}

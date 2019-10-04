@@ -41,6 +41,7 @@ type trackingState struct {
 	eI float64
 	uI float64
 	uD float64
+	uV float64
 }
 
 func (c *TrackingController) Reset() {
@@ -60,9 +61,10 @@ func (c *TrackingController) Update(
 	uD := ((c.DerivativeGain/c.LowPassTimeConstant.Seconds())*(e-c.state.e) + c.state.uD) /
 		(dt.Seconds()/c.LowPassTimeConstant.Seconds() + 1)
 	uV := uP + uI + uD + ff
-	c.state.eI = e + c.AntiWindUpGain*(actualInput-uV+ff)
+	c.state.eI = e + c.AntiWindUpGain*(actualInput-c.state.uV)
 	c.state.uI = uI
 	c.state.uD = uD
+	c.state.uV = uV
 	c.state.e = e
 	return math.Max(c.MinOutput, math.Min(c.MaxOutput, uV))
 }

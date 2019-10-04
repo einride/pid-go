@@ -25,19 +25,19 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 		{
 			measuredOutput: 0.0,
 			reference:      1.0,
-			expectedState:  trackingState{e: 1.0, uI: 0.0, eI: 1.0},
+			expectedState:  trackingState{e: 1.0, eI: 1.0, uI: 0.0, uD: 0.0, uV: 1.0},
 			expectedOutput: 1.0,
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      50.0,
-			expectedState:  trackingState{e: 50.0, uI: 0.0, eI: 50.0},
+			expectedState:  trackingState{e: 50.0, eI: 50.0, uI: 0.0, uD: 0.0, uV: 50.0},
 			expectedOutput: 10.0,
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      -50.0,
-			expectedState:  trackingState{e: -50.0, uI: -0.0, eI: -50.0},
+			expectedState:  trackingState{e: -50.0, eI: -50.0, uI: 0.0, uD: 0.0, uV: -50.0},
 			expectedOutput: -10.0,
 		},
 	} {
@@ -56,6 +56,7 @@ func TestTrackingController_Reset(t *testing.T) {
 		e:  5,
 		uI: 5,
 		uD: 5,
+		uV: 5,
 		eI: 5,
 	}
 	// When resetting stored values

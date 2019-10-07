@@ -33,10 +33,10 @@ type TrackingController struct {
 	// MinOutput is the min output from the PID.
 	MinOutput float64
 
-	state trackingState
+	state TrackingState
 }
 
-type trackingState struct {
+type TrackingState struct {
 	e  float64
 	eI float64
 	uI float64
@@ -45,7 +45,7 @@ type trackingState struct {
 }
 
 func (c *TrackingController) Reset() {
-	c.state = trackingState{}
+	c.state = TrackingState{}
 }
 
 func (c *TrackingController) Update(
@@ -67,4 +67,8 @@ func (c *TrackingController) Update(
 	c.state.uV = uV
 	c.state.e = e
 	return math.Max(c.MinOutput, math.Min(c.MaxOutput, uV))
+}
+
+func (c *TrackingController) GetState() TrackingState {
+	return c.state
 }

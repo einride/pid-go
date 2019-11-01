@@ -8,13 +8,14 @@ import (
 )
 
 func TestTrackingController_PControllerUpdate(t *testing.T) {
-	// Given a saturated P controller
+	// Given a tracking P controller
 	c := &TrackingController{
-		LowPassTimeConstant: 1 * time.Second,
-		ProportionalGain:    1,
-		AntiWindUpGain:      0,
-		MinOutput:           -10,
-		MaxOutput:           10,
+		LowPassTimeConstant:        1 * time.Second,
+		ProportionalGain:           1,
+		AntiWindUpGain:             0,
+		IntegralPartDecreaseFactor: 0.1,
+		MinOutput:                  -10,
+		MaxOutput:                  10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
@@ -63,4 +64,29 @@ func TestTrackingController_Reset(t *testing.T) {
 	c.Reset()
 	// Then
 	require.Equal(t, trackingState{}, c.state)
+}
+
+func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
+	// Given a tracking PID controller
+	c := &TrackingController{
+		LowPassTimeConstant:        1 * time.Second,
+		ProportionalGain:           1,
+		DerivativeGain:             10,
+		IntegralGain:               0.01,
+		AntiWindUpGain:             0.5,
+		IntegralPartDecreaseFactor: 0.1,
+		MinOutput:                  -10,
+		MaxOutput:                  10,
+	}
+	c.state = trackingState{
+		e:  5,
+		uI: 1000,
+		uD: 500,
+		uV: 1,
+		eI: 10,
+	}
+	// When offloading the integral term
+	c.DischargeIntegral(dtTest)
+	// Then
+	require.Equal(t, c.state, trackingState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, uV: 1.0})
 }

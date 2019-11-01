@@ -12,6 +12,7 @@ type Controller interface {
 	Update(targetValue float64, actualValue float64, ff float64, dt time.Duration) float64
 	GetState(now time.Time) *adv1.PIDState
 	Reset()
+	DischargeIntegral(dt time.Duration)
 }
 
 // BumplessController represents a PID controller with feed forward term and bumpless transfer between
@@ -20,4 +21,5 @@ type BumplessController interface {
 	Update(targetValue float64, actualValue float64, ff float64, actualInput float64, dt time.Duration) float64
 	GetState(now time.Time) *adv1.PIDState
 	Reset()
+	DischargeIntegral(dt time.Duration)
 }

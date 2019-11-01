@@ -15,10 +15,11 @@ const (
 func TestSaturatedController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
 	c := &SaturatedController{
-		LowPassTimeConstant: 1 * time.Second,
-		ProportionalGain:    1,
-		MinOutput:           -10,
-		MaxOutput:           10,
+		LowPassTimeConstant:        1 * time.Second,
+		ProportionalGain:           1,
+		IntegralPartDecreaseFactor: 0.1,
+		MinOutput:                  -10,
+		MaxOutput:                  10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
@@ -52,13 +53,14 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 func TestSaturatedController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
 	c := &SaturatedController{
-		LowPassTimeConstant: 1 * time.Second,
-		DerivativeGain:      0.01,
-		ProportionalGain:    1,
-		IntegralGain:        10,
-		AntiWindUpGain:      10,
-		MinOutput:           -10,
-		MaxOutput:           10,
+		LowPassTimeConstant:        1 * time.Second,
+		DerivativeGain:             0.01,
+		ProportionalGain:           1,
+		IntegralGain:               10,
+		AntiWindUpGain:             10,
+		IntegralPartDecreaseFactor: 0.1,
+		MinOutput:                  -10,
+		MaxOutput:                  10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
@@ -94,10 +96,11 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 func TestSaturatedPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
 	c := &SaturatedController{
-		LowPassTimeConstant: 1 * time.Second,
-		IntegralGain:        10,
-		MinOutput:           -10,
-		MaxOutput:           10,
+		LowPassTimeConstant:        1 * time.Second,
+		IntegralGain:               10,
+		IntegralPartDecreaseFactor: 0.1,
+		MinOutput:                  -10,
+		MaxOutput:                  10,
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
@@ -155,4 +158,29 @@ func TestSaturatedController_Reset(t *testing.T) {
 	c.Reset()
 	// Then
 	require.Equal(t, saturatedState{}, c.state)
+}
+
+func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
+	// Given a saturated PID controller
+	c := &SaturatedController{
+		LowPassTimeConstant:        1 * time.Second,
+		ProportionalGain:           1,
+		DerivativeGain:             10,
+		IntegralGain:               0.01,
+		AntiWindUpGain:             0.5,
+		IntegralPartDecreaseFactor: 0.1,
+		MinOutput:                  -10,
+		MaxOutput:                  10,
+	}
+	c.state = saturatedState{
+		e:  5,
+		uI: 1000,
+		uD: 500,
+		u:  1,
+		eI: 10,
+	}
+	// When offloading the integral term
+	c.DischargeIntegral(dtTest)
+	// Then
+	require.Equal(t, c.state, saturatedState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, u: 1.0})
 }

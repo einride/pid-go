@@ -27,6 +27,8 @@ type SaturatedController struct {
 	DerivativeGain float64
 	// AntiWindUpGain is the anti-windup tracking gain.
 	AntiWindUpGain float64
+	// Inverse of the time constant to discharge the integral part of the PID controller [1/s]
+	IntegralPartDecreaseFactor float64
 	// LowPassTimeConstant is the D part low-pass filter time constant => cut-off frequency 1/LowPassTimeConstant.
 	LowPassTimeConstant time.Duration
 	// MaxOutput is the max output from the PID.
@@ -73,4 +75,10 @@ func (c *SaturatedController) GetState(now time.Time) *adv1.PIDState {
 		DerivativeState: float32(c.state.uD),
 		ControlSignal:   float32(c.state.u),
 	}
+}
+
+func (c *SaturatedController) DischargeIntegral(dt time.Duration) {
+	c.state.eI = 0.0
+	c.state.uI =
+		math.Max(0, math.Min(1-dt.Seconds()*c.IntegralPartDecreaseFactor, 1.0)) * c.state.uI
 }

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	adv1 "github.com/einride/proto/gen/go/ad/v1"
-	tspb "github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // TrackingController implements a PIDT1 controller with feed forward term, anti-windup and bumpless
@@ -76,7 +76,7 @@ func (c *TrackingController) Update(
 
 func (c *TrackingController) GetState(now time.Time) *adv1.PIDState {
 	return &adv1.PIDState{
-		Time:            &tspb.Timestamp{Seconds: now.Unix(), Nanos: int32(now.Nanosecond())},
+		Time:            &timestamppb.Timestamp{Seconds: now.Unix(), Nanos: int32(now.Nanosecond())},
 		Error:           float32(c.state.e),
 		IntegralError:   float32(c.state.eI),
 		IntegralState:   float32(c.state.uI),

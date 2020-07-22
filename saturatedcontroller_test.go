@@ -1,10 +1,11 @@
 package pid
 
 import (
+	"math"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 const (
@@ -46,7 +47,7 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 		// When
 		c.Update(tt.reference, tt.measuredOutput, 0.0, dtTest)
 		// Then the controller state should be the expected
-		require.Equal(t, tt.expectedState, c.state)
+		assert.Equal(t, tt.expectedState, c.state)
 	}
 }
 
@@ -85,11 +86,11 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 			c.Update(tt.reference, c.state.u, 0.0, dtTest)
 		}
 		// Then the controller I state only should give the expected output
-		require.InDelta(t, tt.expectedState.e, c.state.e, deltaTest)
-		require.InDelta(t, tt.expectedState.u, c.state.u, deltaTest)
-		require.InDelta(t, tt.expectedState.u, c.state.uI, deltaTest)
-		require.InDelta(t, tt.expectedState.eI, c.state.eI, deltaTest)
-		require.InDelta(t, tt.expectedState.uD, c.state.uD, deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.e-c.state.e) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.u-c.state.u) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.u-c.state.uI) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.eI-c.state.eI) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.uD-c.state.uD) < deltaTest)
 	}
 }
 
@@ -136,11 +137,11 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 		// violating saturation constraints.
 		for i := 0; i < 500; i++ {
 			c.Update(tt.reference, c.state.u, tt.feedForward, dtTest)
-			require.True(t, c.state.u <= c.MaxOutput)
+			assert.Assert(t, c.state.u <= c.MaxOutput)
 		}
-		require.InDelta(t, tt.expectedState.e, c.state.e, deltaTest)
-		require.InDelta(t, tt.expectedState.u, c.state.u, deltaTest)
-		require.InDelta(t, tt.expectedState.uI, c.state.uI, deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.e-c.state.e) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.u-c.state.u) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.uI-c.state.uI) < deltaTest)
 	}
 }
 
@@ -157,7 +158,7 @@ func TestSaturatedController_Reset(t *testing.T) {
 	// When resetting stored values
 	c.Reset()
 	// Then
-	require.Equal(t, saturatedState{}, c.state)
+	assert.Equal(t, saturatedState{}, c.state)
 }
 
 func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
@@ -182,5 +183,5 @@ func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
 	// When offloading the integral term
 	c.DischargeIntegral(dtTest)
 	// Then
-	require.Equal(t, c.state, saturatedState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, u: 1.0})
+	assert.Equal(t, c.state, saturatedState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, u: 1.0})
 }

@@ -4,7 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
+	is "gotest.tools/v3/assert/cmp"
 )
 
 func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
@@ -17,9 +18,9 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 		MaxOutput:        50,
 	}
 	// Check output value when output increase is needed
-	assert.Equal(t, float64(50), pidControl.Update(reference, 0, time.Second/10))
+	assert.Check(t, is.Equal(float64(50), pidControl.Update(reference, 0, time.Second/10)))
 	// Check proportional error
-	assert.Equal(t, float64(10), pidControl.state.errorSize)
+	assert.Check(t, is.Equal(float64(10), pidControl.state.errorSize))
 }
 
 func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
@@ -32,9 +33,9 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 		MaxOutput:        50,
 	}
 	// Check output value when output value decrease is needed
-	assert.Equal(t, float64(0), pidControl.Update(reference, 10, time.Second/10))
+	assert.Check(t, is.Equal(float64(0), pidControl.Update(reference, 10, time.Second/10)))
 	// Check proportional error
-	assert.Equal(t, float64(0), pidControl.state.errorSize)
+	assert.Check(t, is.Equal(float64(0), pidControl.state.errorSize))
 }
 
 func TestSimpleController_Reset(t *testing.T) {
@@ -61,5 +62,5 @@ func TestSimpleController_Reset(t *testing.T) {
 	// When resetting stored values
 	c.Reset()
 	// Then
-	assert.Equal(t, expectedController, c)
+	assert.Equal(t, expectedController.state, c.state)
 }

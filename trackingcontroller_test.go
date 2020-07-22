@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestTrackingController_PControllerUpdate(t *testing.T) {
@@ -44,9 +44,9 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 	} {
 		tt := tt
 		// When
-		require.Equal(t, tt.expectedOutput, c.Update(tt.reference, tt.measuredOutput, 0.0, 0.0, dtTest))
+		assert.Equal(t, tt.expectedOutput, c.Update(tt.reference, tt.measuredOutput, 0.0, 0.0, dtTest))
 		// Then the controller state should be the expected
-		require.Equal(t, tt.expectedState, c.state)
+		assert.Equal(t, tt.expectedState, c.state)
 	}
 }
 
@@ -63,7 +63,7 @@ func TestTrackingController_Reset(t *testing.T) {
 	// When resetting stored values
 	c.Reset()
 	// Then
-	require.Equal(t, trackingState{}, c.state)
+	assert.Equal(t, trackingState{}, c.state)
 }
 
 func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
@@ -88,5 +88,5 @@ func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
 	// When offloading the integral term
 	c.DischargeIntegral(dtTest)
 	// Then
-	require.Equal(t, c.state, trackingState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, uV: 1.0})
+	assert.Equal(t, c.state, trackingState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, uV: 1.0})
 }

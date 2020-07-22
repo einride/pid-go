@@ -5,7 +5,7 @@ import (
 	"time"
 
 	adv1 "github.com/einride/proto/gen/go/ad/v1"
-	tspb "github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // SaturatedController implements a PIDT1-controller with feed forward term, a saturated control output and anti-windup.
@@ -68,7 +68,7 @@ func (c *SaturatedController) Update(target float64, actual float64, ff float64,
 
 func (c *SaturatedController) GetState(now time.Time) *adv1.PIDState {
 	return &adv1.PIDState{
-		Time:            &tspb.Timestamp{Seconds: now.Unix(), Nanos: int32(now.Nanosecond())},
+		Time:            &timestamppb.Timestamp{Seconds: now.Unix(), Nanos: int32(now.Nanosecond())},
 		Error:           float32(c.state.e),
 		IntegralError:   float32(c.state.eI),
 		IntegralState:   float32(c.state.uI),
@@ -79,6 +79,5 @@ func (c *SaturatedController) GetState(now time.Time) *adv1.PIDState {
 
 func (c *SaturatedController) DischargeIntegral(dt time.Duration) {
 	c.state.eI = 0.0
-	c.state.uI =
-		math.Max(0, math.Min(1-dt.Seconds()*c.IntegralPartDecreaseFactor, 1.0)) * c.state.uI
+	c.state.uI = math.Max(0, math.Min(1-dt.Seconds()*c.IntegralPartDecreaseFactor, 1.0)) * c.state.uI
 }

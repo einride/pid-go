@@ -5,8 +5,7 @@ all: \
 	go-review \
 	go-test \
 	go-mod-tidy \
-	git-verify-nodiff \
-	git-verify-submodules
+	git-verify-nodiff
 
 include tools/git-verify-nodiff/rules.mk
 include tools/golangci-lint/rules.mk

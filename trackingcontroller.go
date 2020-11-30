@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	adv1 "github.com/einride/proto/gen/go/ad/v1"
+	adv1 "github.com/einride/proto-aet/gen/go/ad/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

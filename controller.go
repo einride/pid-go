@@ -4,7 +4,7 @@ package pid
 import (
 	"time"
 
-	adv1 "github.com/einride/proto/gen/go/ad/v1"
+	adv1 "github.com/einride/proto-aet/gen/go/ad/v1"
 )
 
 // Controller represents a PID controller with feed forward term.

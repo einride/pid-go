@@ -3,9 +3,6 @@ package pid
 import (
 	"math"
 	"time"
-
-	adv1 "github.com/einride/proto-aet/gen/go/ad/v1"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // TrackingController implements a PIDT1 controller with feed forward term, anti-windup and bumpless
@@ -74,14 +71,13 @@ func (c *TrackingController) Update(
 	return math.Max(c.MinOutput, math.Min(c.MaxOutput, uV))
 }
 
-func (c *TrackingController) GetState(now time.Time) *adv1.PIDState {
-	return &adv1.PIDState{
-		Time:            &timestamppb.Timestamp{Seconds: now.Unix(), Nanos: int32(now.Nanosecond())},
-		Error:           float32(c.state.e),
-		IntegralError:   float32(c.state.eI),
-		IntegralState:   float32(c.state.uI),
-		DerivativeState: float32(c.state.uD),
-		ControlSignal:   float32(c.state.uV),
+func (c *TrackingController) GetState() *State {
+	return &State{
+		Error:           c.state.e,
+		IntegralError:   c.state.eI,
+		IntegralState:   c.state.uI,
+		DerivativeState: c.state.uD,
+		ControlSignal:   c.state.uV,
 	}
 }
 

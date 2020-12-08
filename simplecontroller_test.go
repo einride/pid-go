@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"gotest.tools/v3/assert"
-	is "gotest.tools/v3/assert/cmp"
 )
 
 func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
@@ -18,9 +17,9 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 		MaxOutput:        50,
 	}
 	// Check output value when output increase is needed
-	assert.Check(t, is.Equal(float64(50), pidControl.Update(reference, 0, time.Second/10)))
+	assert.Equal(t, float64(50), pidControl.Update(reference, 0, 0, time.Second/10))
 	// Check proportional error
-	assert.Check(t, is.Equal(float64(10), pidControl.state.errorSize))
+	assert.Equal(t, float64(10), pidControl.state.errorSize)
 }
 
 func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
@@ -33,9 +32,9 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 		MaxOutput:        50,
 	}
 	// Check output value when output value decrease is needed
-	assert.Check(t, is.Equal(float64(0), pidControl.Update(reference, 10, time.Second/10)))
+	assert.Equal(t, float64(0), pidControl.Update(reference, 10, 0, time.Second/10))
 	// Check proportional error
-	assert.Check(t, is.Equal(float64(0), pidControl.state.errorSize))
+	assert.Equal(t, float64(0), pidControl.state.errorSize)
 }
 
 func TestSimpleController_Reset(t *testing.T) {

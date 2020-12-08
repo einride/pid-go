@@ -3,9 +3,6 @@ package pid
 import (
 	"math"
 	"time"
-
-	adv1 "github.com/einride/proto-aet/gen/go/ad/v1"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // SaturatedController implements a PIDT1-controller with feed forward term, a saturated control output and anti-windup.
@@ -39,6 +36,8 @@ type SaturatedController struct {
 	state saturatedState
 }
 
+var _ Controller = &SaturatedController{}
+
 type saturatedState struct {
 	e  float64
 	eI float64
@@ -66,14 +65,13 @@ func (c *SaturatedController) Update(target float64, actual float64, ff float64,
 	return c.state.u
 }
 
-func (c *SaturatedController) GetState(now time.Time) *adv1.PIDState {
-	return &adv1.PIDState{
-		Time:            &timestamppb.Timestamp{Seconds: now.Unix(), Nanos: int32(now.Nanosecond())},
-		Error:           float32(c.state.e),
-		IntegralError:   float32(c.state.eI),
-		IntegralState:   float32(c.state.uI),
-		DerivativeState: float32(c.state.uD),
-		ControlSignal:   float32(c.state.u),
+func (c *SaturatedController) GetState() *State {
+	return &State{
+		Error:           c.state.e,
+		IntegralError:   c.state.eI,
+		IntegralState:   c.state.uI,
+		DerivativeState: c.state.uD,
+		ControlSignal:   c.state.u,
 	}
 }
 

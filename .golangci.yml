@@ -18,3 +18,4 @@ linters:
     - unparam # allow constant parameters
     - goerr113 # allow "dynamic" errors
     - gofumpt # TODO: enable when whitespace issue has been resolved
+    - nlreturn # don't require blank line before return

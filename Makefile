@@ -1,23 +1,26 @@
-# all: run a complete build
+SHELL := /bin/bash
+
 all: \
-	markdown-lint \
+	commitlint \
+	prettier-markdown \
 	go-lint \
 	go-review \
 	go-test \
 	go-mod-tidy \
 	git-verify-nodiff
 
+include tools/commitlint/rules.mk
 include tools/git-verify-nodiff/rules.mk
 include tools/golangci-lint/rules.mk
-include tools/prettier/rules.mk
 include tools/goreview/rules.mk
+include tools/prettier/rules.mk
 
-# go-mod-tidy: update Go module files
 .PHONY: go-mod-tidy
 go-mod-tidy:
-	find . -name go.mod -execdir go mod tidy -v \;
+	$(info [$@] tidying Go module files...)
+	@go mod tidy -v
 
-# go-test: run Go test suite
 .PHONY: go-test
 go-test:
-	go test -count 1 -cover -race ./...
+	$(info [$@] running Go tests...)
+	@go test -count 1 -cover -race ./...

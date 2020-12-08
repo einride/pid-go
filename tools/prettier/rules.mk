@@ -1,14 +1,17 @@
-prettier_version := 1.19.1
-prettier_cwd := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/v$(prettier_version)
+prettier_cwd := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 prettier := $(prettier_cwd)/node_modules/.bin/prettier
 
-$(prettier):
-	$(info installing prettier...)
-	@npm install --no-save --no-audit --prefix $(prettier_cwd) prettier@$(prettier_version)
-	@chmod +x $@
+$(prettier): $(prettier_cwd)/package.json
+	$(info [prettier] installing...)
+	@cd $(prettier_cwd) && npm install --no-save --no-audit &> /dev/null
 	@touch $@
 
-# markdown-lint: lint Markdown files
-.PHONY: markdown-lint
-markdown-lint: $(prettier)
-	$(prettier) --check **/*.md --parser markdown
+.PHONY: prettier-markdown
+prettier-markdown: $(prettier_cwd)/.prettierignore $(prettier)
+	$(info [$@] formatting Markdown files...)
+	@$(prettier) \
+		--loglevel warn \
+		--ignore-path $< \
+		--parser markdown \
+		--prose-wrap always \
+		--write **/*.md

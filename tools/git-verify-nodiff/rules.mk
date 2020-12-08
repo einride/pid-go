@@ -3,5 +3,5 @@ git_verify_nodiff := $(git_verify_nodiff_cwd)/git-verify-nodiff.bash
 
 .PHONY: git-verify-nodiff
 git-verify-nodiff:
-	@echo verifying that git has no diff...
+	$(info [$@] verifying that git has no diff...)
 	@$(git_verify_nodiff)

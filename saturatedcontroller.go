@@ -36,8 +36,6 @@ type SaturatedController struct {
 	state saturatedState
 }
 
-var _ Controller = &SaturatedController{}
-
 type saturatedState struct {
 	e  float64
 	eI float64

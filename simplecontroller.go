@@ -20,9 +20,7 @@ type SimpleController struct {
 	state simpleState
 }
 
-var _ Controller = &SimpleController{}
-
-func (s *SimpleController) Update(reference float64, current float64, ff float64, dt time.Duration) float64 {
+func (s *SimpleController) Update(reference float64, current float64, dt time.Duration) float64 {
 	previousError := s.state.errorSize
 	s.state.errorSize = reference - current
 	s.state.errorRate = (s.state.errorSize - previousError) / dt.Seconds()

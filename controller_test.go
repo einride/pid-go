@@ -11,55 +11,62 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 	// Given a pidControl with reference value and update interval, dt
 	reference := float64(10)
 	pidControl := Controller{
-		ProportionalGain: 2.0,
-		IntegralGain:     1.0,
-		DerivativeGain:   1.0,
-		MaxOutput:        50,
+		Config: ControllerConfig{
+			ProportionalGain: 2.0,
+			IntegralGain:     1.0,
+			DerivativeGain:   1.0,
+			MaxOutput:        50,
+		},
 	}
 	// Check output value when output increase is needed
 	assert.Equal(t, float64(50), pidControl.Update(reference, 0, time.Second/10))
 	// Check proportional error
-	assert.Equal(t, float64(10), pidControl.state.errorSize)
+	assert.Equal(t, float64(10), pidControl.State.ErrorSize)
 }
 
 func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 	// Given a pidControl with reference output and update interval, dt
 	reference := float64(10)
 	pidControl := Controller{
-		ProportionalGain: 2.0,
-		IntegralGain:     1.0,
-		DerivativeGain:   1.0,
-		MaxOutput:        50,
+		Config: ControllerConfig{
+			ProportionalGain: 2.0,
+			IntegralGain:     1.0,
+			DerivativeGain:   1.0,
+			MaxOutput:        50,
+		},
 	}
 	// Check output value when output value decrease is needed
 	assert.Equal(t, float64(0), pidControl.Update(reference, 10, time.Second/10))
 	// Check proportional error
-	assert.Equal(t, float64(0), pidControl.state.errorSize)
+	assert.Equal(t, float64(0), pidControl.State.ErrorSize)
 }
 
 func TestSimpleController_Reset(t *testing.T) {
 	// Given a Controller with stored values not equal to 0
 	c := &Controller{
-		ProportionalGain: 2.0,
-		IntegralGain:     1.0,
-		DerivativeGain:   1.0,
-		MaxOutput:        50,
-		state: controllerState{
-			errorOverTime: 10,
-			errorRate:     10,
-			errorSize:     10,
+		Config: ControllerConfig{
+			ProportionalGain: 2.0,
+			IntegralGain:     1.0,
+			DerivativeGain:   1.0,
+			MaxOutput:        50,
+		},
+		State: ControllerState{
+			ErrorOverTime: 10,
+			ErrorRate:     10,
+			ErrorSize:     10,
 		},
 	}
 	// And a duplicate Controller with empty values
 	expectedController := &Controller{
-		ProportionalGain: 2.0,
-		IntegralGain:     1.0,
-		DerivativeGain:   1.0,
-		MaxOutput:        50,
+		Config: ControllerConfig{
+			ProportionalGain: 2.0,
+			IntegralGain:     1.0,
+			DerivativeGain:   1.0,
+			MaxOutput:        50,
+		},
 	}
-
 	// When resetting stored values
 	c.Reset()
 	// Then
-	assert.Equal(t, expectedController.state, c.state)
+	assert.Equal(t, expectedController.State, c.State)
 }

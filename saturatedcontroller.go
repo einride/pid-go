@@ -16,6 +16,11 @@ import (
 // The complete controller structure is detailed in Steer-by-Wire Controller Development for Einride's T-Pod: Phase One,
 // Michele Sigilló, 2018.
 type SaturatedController struct {
+	Config SaturatedControllerConfig
+	State  SaturatedControllerState
+}
+
+type SaturatedControllerConfig struct {
 	// ProportionalGain is the P part gain.
 	ProportionalGain float64
 	// IntegralGain is the I part gain.
@@ -32,48 +37,40 @@ type SaturatedController struct {
 	MaxOutput float64
 	// MinOutput is the min output from the PID.
 	MinOutput float64
-
-	state saturatedControllerState
 }
 
-type saturatedControllerState struct {
-	e  float64
-	eI float64
-	uI float64
-	uD float64
-	u  float64
+type SaturatedControllerState struct {
+	Error           float64
+	IntegralError   float64
+	IntegralState   float64
+	DerivativeState float64
+	ControlSignal   float64
 }
 
 func (c *SaturatedController) Reset() {
-	c.state = saturatedControllerState{}
+	c.State = SaturatedControllerState{}
 }
 
 func (c *SaturatedController) Update(target float64, actual float64, ff float64, dt time.Duration) float64 {
 	e := target - actual
-	uP := e * c.ProportionalGain
-	uI := c.state.eI*c.IntegralGain*dt.Seconds() + c.state.uI
-	uD := ((c.DerivativeGain/c.LowPassTimeConstant.Seconds())*(e-c.state.e) + c.state.uD) /
-		(dt.Seconds()/c.LowPassTimeConstant.Seconds() + 1)
+	uP := e * c.Config.ProportionalGain
+	uI := c.State.IntegralError*c.Config.IntegralGain*dt.Seconds() + c.State.IntegralState
+	uD := ((c.Config.DerivativeGain/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.Error) +
+		c.State.DerivativeState) /
+		(dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
 	uV := uP + uI + uD + ff
-	c.state.u = math.Max(c.MinOutput, math.Min(c.MaxOutput, uV))
-	c.state.eI = e + c.AntiWindUpGain*(c.state.u-uV)
-	c.state.uI = uI
-	c.state.uD = uD
-	c.state.e = e
-	return c.state.u
-}
-
-func (c *SaturatedController) GetState() *State {
-	return &State{
-		Error:           c.state.e,
-		IntegralError:   c.state.eI,
-		IntegralState:   c.state.uI,
-		DerivativeState: c.state.uD,
-		ControlSignal:   c.state.u,
-	}
+	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, uV))
+	c.State.IntegralError = e + c.Config.AntiWindUpGain*(c.State.ControlSignal-uV)
+	c.State.IntegralState = uI
+	c.State.DerivativeState = uD
+	c.State.Error = e
+	return c.State.ControlSignal
 }
 
 func (c *SaturatedController) DischargeIntegral(dt time.Duration) {
-	c.state.eI = 0.0
-	c.state.uI = math.Max(0, math.Min(1-dt.Seconds()*c.IntegralPartDecreaseFactor, 1.0)) * c.state.uI
+	c.State.IntegralError = 0.0
+	c.State.IntegralState = math.Max(
+		0,
+		math.Min(1-dt.Seconds()*c.Config.IntegralPartDecreaseFactor, 1.0),
+	) * c.State.IntegralState
 }

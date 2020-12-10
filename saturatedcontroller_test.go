@@ -16,66 +16,82 @@ const (
 func TestSaturatedController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
 	c := &SaturatedController{
-		LowPassTimeConstant:        1 * time.Second,
-		ProportionalGain:           1,
-		IntegralPartDecreaseFactor: 0.1,
-		MinOutput:                  -10,
-		MaxOutput:                  10,
+		Config: SaturatedControllerConfig{
+			LowPassTimeConstant:        1 * time.Second,
+			ProportionalGain:           1,
+			IntegralPartDecreaseFactor: 0.1,
+			MinOutput:                  -10,
+			MaxOutput:                  10,
+		},
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
-		expectedState  saturatedControllerState
+		expectedState  SaturatedControllerState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      1.0,
-			expectedState:  saturatedControllerState{e: 1.0, u: c.ProportionalGain * 1.0, eI: 1.0},
+			expectedState: SaturatedControllerState{
+				Error:         1.0,
+				ControlSignal: c.Config.ProportionalGain * 1.0,
+				IntegralError: 1.0,
+			},
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      50.0,
-			expectedState:  saturatedControllerState{e: 50.0, u: c.MaxOutput, eI: 50.0},
+			expectedState: SaturatedControllerState{
+				Error:         50.0,
+				ControlSignal: c.Config.MaxOutput,
+				IntegralError: 50.0,
+			},
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      -50.0,
-			expectedState:  saturatedControllerState{e: -50.0, u: c.MinOutput, eI: -50.0},
+			expectedState: SaturatedControllerState{
+				Error:         -50.0,
+				ControlSignal: c.Config.MinOutput,
+				IntegralError: -50.0,
+			},
 		},
 	} {
 		tt := tt
 		// When
 		c.Update(tt.reference, tt.measuredOutput, 0.0, dtTest)
 		// Then the controller state should be the expected
-		assert.Equal(t, tt.expectedState, c.state)
+		assert.Equal(t, tt.expectedState, c.State)
 	}
 }
 
 func TestSaturatedController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
 	c := &SaturatedController{
-		LowPassTimeConstant:        1 * time.Second,
-		DerivativeGain:             0.01,
-		ProportionalGain:           1,
-		IntegralGain:               10,
-		AntiWindUpGain:             10,
-		IntegralPartDecreaseFactor: 0.1,
-		MinOutput:                  -10,
-		MaxOutput:                  10,
+		Config: SaturatedControllerConfig{
+			LowPassTimeConstant:        1 * time.Second,
+			DerivativeGain:             0.01,
+			ProportionalGain:           1,
+			IntegralGain:               10,
+			AntiWindUpGain:             10,
+			IntegralPartDecreaseFactor: 0.1,
+			MinOutput:                  -10,
+			MaxOutput:                  10,
+		},
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
-		expectedState  saturatedControllerState
+		expectedState  SaturatedControllerState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
-			expectedState: saturatedControllerState{
-				e:  0.0,
-				u:  5.0,
-				eI: 0.0,
-				uD: 0.0,
+			expectedState: SaturatedControllerState{
+				Error:           0.0,
+				ControlSignal:   5.0,
+				IntegralError:   0.0,
+				DerivativeState: 0.0,
 			},
 		},
 	} {
@@ -83,50 +99,52 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 		// When enough iterations have passed
 		c.Reset()
 		for i := 0; i < 500; i++ {
-			c.Update(tt.reference, c.state.u, 0.0, dtTest)
+			c.Update(tt.reference, c.State.ControlSignal, 0.0, dtTest)
 		}
 		// Then the controller I state only should give the expected output
-		assert.Assert(t, math.Abs(tt.expectedState.e-c.state.e) < deltaTest)
-		assert.Assert(t, math.Abs(tt.expectedState.u-c.state.u) < deltaTest)
-		assert.Assert(t, math.Abs(tt.expectedState.u-c.state.uI) < deltaTest)
-		assert.Assert(t, math.Abs(tt.expectedState.eI-c.state.eI) < deltaTest)
-		assert.Assert(t, math.Abs(tt.expectedState.uD-c.state.uD) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.Error-c.State.Error) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.ControlSignal-c.State.ControlSignal) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.ControlSignal-c.State.IntegralState) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.IntegralError-c.State.IntegralError) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.DerivativeState-c.State.DerivativeState) < deltaTest)
 	}
 }
 
 func TestSaturatedPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
 	c := &SaturatedController{
-		LowPassTimeConstant:        1 * time.Second,
-		IntegralGain:               10,
-		IntegralPartDecreaseFactor: 0.1,
-		MinOutput:                  -10,
-		MaxOutput:                  10,
+		Config: SaturatedControllerConfig{
+			LowPassTimeConstant:        1 * time.Second,
+			IntegralGain:               10,
+			IntegralPartDecreaseFactor: 0.1,
+			MinOutput:                  -10,
+			MaxOutput:                  10,
+		},
 	}
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
 		feedForward    float64
-		expectedState  saturatedControllerState
+		expectedState  SaturatedControllerState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
 			feedForward:    2.0,
-			expectedState: saturatedControllerState{
-				e:  0.0,
-				u:  5.0,
-				uI: 5.0 - 2.0,
+			expectedState: SaturatedControllerState{
+				Error:         0.0,
+				ControlSignal: 5.0,
+				IntegralState: 5.0 - 2.0,
 			},
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
 			feedForward:    15.0,
-			expectedState: saturatedControllerState{
-				e:  0.0,
-				u:  5.0,
-				uI: 5.0 - 15.0,
+			expectedState: SaturatedControllerState{
+				Error:         0.0,
+				ControlSignal: 5.0,
+				IntegralState: 5.0 - 15.0,
 			},
 		},
 	} {
@@ -136,52 +154,61 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 		// Then the controller I state should compensate for difference between feed forward without
 		// violating saturation constraints.
 		for i := 0; i < 500; i++ {
-			c.Update(tt.reference, c.state.u, tt.feedForward, dtTest)
-			assert.Assert(t, c.state.u <= c.MaxOutput)
+			c.Update(tt.reference, c.State.ControlSignal, tt.feedForward, dtTest)
+			assert.Assert(t, c.State.ControlSignal <= c.Config.MaxOutput)
 		}
-		assert.Assert(t, math.Abs(tt.expectedState.e-c.state.e) < deltaTest)
-		assert.Assert(t, math.Abs(tt.expectedState.u-c.state.u) < deltaTest)
-		assert.Assert(t, math.Abs(tt.expectedState.uI-c.state.uI) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.Error-c.State.Error) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.ControlSignal-c.State.ControlSignal) < deltaTest)
+		assert.Assert(t, math.Abs(tt.expectedState.IntegralState-c.State.IntegralState) < deltaTest)
 	}
 }
 
 func TestSaturatedController_Reset(t *testing.T) {
 	// Given a SaturatedPIDController with stored values not equal to 0
 	c := &SaturatedController{}
-	c.state = saturatedControllerState{
-		e:  5,
-		uI: 5,
-		uD: 5,
-		u:  5,
-		eI: 5,
+	c.State = SaturatedControllerState{
+		Error:           5,
+		IntegralState:   5,
+		DerivativeState: 5,
+		ControlSignal:   5,
+		IntegralError:   5,
 	}
 	// When resetting stored values
 	c.Reset()
 	// Then
-	assert.Equal(t, saturatedControllerState{}, c.state)
+	assert.Equal(t, SaturatedControllerState{}, c.State)
 }
 
 func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
 	// Given a saturated PID controller
 	c := &SaturatedController{
-		LowPassTimeConstant:        1 * time.Second,
-		ProportionalGain:           1,
-		DerivativeGain:             10,
-		IntegralGain:               0.01,
-		AntiWindUpGain:             0.5,
-		IntegralPartDecreaseFactor: 0.1,
-		MinOutput:                  -10,
-		MaxOutput:                  10,
+		Config: SaturatedControllerConfig{
+			LowPassTimeConstant:        1 * time.Second,
+			ProportionalGain:           1,
+			DerivativeGain:             10,
+			IntegralGain:               0.01,
+			AntiWindUpGain:             0.5,
+			IntegralPartDecreaseFactor: 0.1,
+			MinOutput:                  -10,
+			MaxOutput:                  10,
+		},
 	}
-	c.state = saturatedControllerState{
-		e:  5,
-		uI: 1000,
-		uD: 500,
-		u:  1,
-		eI: 10,
+	c.State = SaturatedControllerState{
+		Error:           5,
+		IntegralState:   1000,
+		DerivativeState: 500,
+		ControlSignal:   1,
+		IntegralError:   10,
 	}
 	// When offloading the integral term
 	c.DischargeIntegral(dtTest)
+	expected := SaturatedControllerState{
+		Error:           5,
+		IntegralError:   0.0,
+		IntegralState:   999.0,
+		DerivativeState: 500.0,
+		ControlSignal:   1.0,
+	}
 	// Then
-	assert.Equal(t, c.state, saturatedControllerState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, u: 1.0})
+	assert.Equal(t, c.State, expected)
 }

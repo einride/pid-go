@@ -6,6 +6,11 @@ import (
 )
 
 type Controller struct {
+	Config ControllerConfig
+	State  ControllerState
+}
+
+type ControllerConfig struct {
 	// ProportionalGain determines ratio of output response to error signal.
 	ProportionalGain float64
 	// IntegralGain determines previous error's affect on output.
@@ -16,42 +21,32 @@ type Controller struct {
 	MinOutput float64
 	// MaxOutput sets an upper limit to the allowed output.
 	MaxOutput float64
+}
 
-	state controllerState
+type ControllerState struct {
+	// ErrorOverTime is the integral error (sum of errors).
+	ErrorOverTime float64
+	// ErrorRate is the derivative error (prop. to rate of change in reference).
+	ErrorRate float64
+	// ErrorSize is the difference between reference and current value.
+	ErrorSize float64
 }
 
 func (s *Controller) Update(reference float64, current float64, dt time.Duration) float64 {
-	previousError := s.state.errorSize
-	s.state.errorSize = reference - current
-	s.state.errorRate = (s.state.errorSize - previousError) / dt.Seconds()
-	s.state.errorOverTime += s.state.errorSize * dt.Seconds()
-	return math.Max(s.MinOutput, math.Min(s.MaxOutput, s.output()))
-}
-
-type controllerState struct {
-	// errorOverTime is the integral error (sum of errors).
-	errorOverTime float64
-	// errorRate is the derivative error (prop. to rate of change in reference).
-	errorRate float64
-	// error is the difference between reference and current value.
-	errorSize float64
+	previousError := s.State.ErrorSize
+	s.State.ErrorSize = reference - current
+	s.State.ErrorRate = (s.State.ErrorSize - previousError) / dt.Seconds()
+	s.State.ErrorOverTime += s.State.ErrorSize * dt.Seconds()
+	return math.Max(s.Config.MinOutput, math.Min(s.Config.MaxOutput, s.output()))
 }
 
 func (s *Controller) Reset() {
-	s.state = controllerState{}
+	s.State = ControllerState{}
 }
 
 // output calculates the necessary output to maintain or reach a reference.
 func (s *Controller) output() float64 {
-	return s.ProportionalGain*s.state.errorSize +
-		s.IntegralGain*s.state.errorOverTime +
-		s.DerivativeGain*s.state.errorRate
-}
-
-func (s *Controller) GetState() *State {
-	return &State{
-		Error:           s.state.errorSize,
-		IntegralError:   s.state.errorOverTime,
-		DerivativeState: s.state.errorOverTime,
-	}
+	return s.Config.ProportionalGain*s.State.ErrorSize +
+		s.Config.IntegralGain*s.State.ErrorOverTime +
+		s.Config.DerivativeGain*s.State.ErrorRate
 }

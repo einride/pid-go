@@ -1,14 +1,5 @@
-# PID-Go
+package pid_test
 
-PID controllers for Go.
-
-## Examples
-
-### `pid.Controller`
-
-A standard PID controller.
-
-```go
 import (
 	"fmt"
 	"time"
@@ -36,21 +27,3 @@ func ExampleController() {
 	// {ControlError:10 ControlErrorIntegral:1 ControlErrorDerivative:100 ControlSignal:50}
 	// {ControlError:0 ControlErrorIntegral:0 ControlErrorDerivative:0 ControlSignal:0}
 }
-```
-
-_[Reference ≫](https://en.wikipedia.org/wiki/PID_controller)_
-
-### `pid.SaturatedController`
-
-A PIDT1-controller with feed forward term, a saturated control output and anti-windup.
-
-_[Reference ≫][astrom]_
-
-### `pid.TrackingController`
-
-a PIDT1 controller with feed forward term, anti-windup and bumpless
-transfer using tracking mode control.
-
-_[Reference ≫][astrom]_
-
-[astrom]: http://www.cds.caltech.edu/~murray/amwiki

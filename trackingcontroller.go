@@ -14,9 +14,6 @@ import (
 // Chapter 6 of Åström and Murray, Feedback Systems:
 // An Introduction to Scientists and Engineers, 2008
 // (https://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf)
-//
-// The controller structure is based on Steer-by-Wire Controller Development for Einride's T-Pod:
-// Phase One, Michele Sigilló, 2018.
 type TrackingController struct {
 	// Config for the TrackingController.
 	Config TrackingControllerConfig
@@ -24,7 +21,7 @@ type TrackingController struct {
 	State TrackingControllerState
 }
 
-// TrackingControllerConfig holds the configurable parameters for the TrackingController.
+// TrackingControllerConfig contains configurable parameters for a TrackingController.
 type TrackingControllerConfig struct {
 	// ProportionalGain is the P part gain.
 	ProportionalGain float64
@@ -44,21 +41,26 @@ type TrackingControllerConfig struct {
 	MinOutput float64
 }
 
-// TrackingControllerState holds the mutable state of the TrackingController.
+// TrackingControllerState holds the mutable state a TrackingController.
 type TrackingControllerState struct {
-	Error           float64
-	IntegralError   float64
-	IntegralState   float64
+	// ControlError is the difference between reference and current value.
+	ControlError float64
+	// ControlErrorIntegral is the integrated control error over time.
+	ControlErrorIntegral float64
+	// TODO: Document me.
+	IntegralState float64
+	// TODO: Document me.
 	DerivativeState float64
-	ControlSignal   float64
+	// ControlSignal is the current control signal output of the controller.
+	ControlSignal float64
 }
 
-// Reset the State of the TrackingController.
+// Reset the controller state.
 func (c *TrackingController) Reset() {
 	c.State = TrackingControllerState{}
 }
 
-// Update the TrackingController.
+// Update the controller state.
 func (c *TrackingController) Update(
 	target float64,
 	actual float64,
@@ -68,20 +70,22 @@ func (c *TrackingController) Update(
 ) float64 {
 	e := target - actual
 	uP := e * c.Config.ProportionalGain
-	uI := c.State.IntegralError*c.Config.IntegralGain*dt.Seconds() + c.State.IntegralState
-	uD := ((c.Config.DerivativeGain/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.Error) + c.State.DerivativeState) /
+	uI := c.State.ControlErrorIntegral*c.Config.IntegralGain*dt.Seconds() + c.State.IntegralState
+	uD := ((c.Config.DerivativeGain/c.Config.LowPassTimeConstant.Seconds())*
+		(e-c.State.ControlError) + c.State.DerivativeState) /
 		(dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
 	uV := uP + uI + uD + ff
-	c.State.IntegralError = e + c.Config.AntiWindUpGain*(actualInput-c.State.ControlSignal)
+	c.State.ControlErrorIntegral = e + c.Config.AntiWindUpGain*(actualInput-c.State.ControlSignal)
 	c.State.IntegralState = uI
 	c.State.DerivativeState = uD
 	c.State.ControlSignal = uV
-	c.State.Error = e
+	c.State.ControlError = e
 	return math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, uV))
 }
 
+// TODO: Document me.
 func (c *TrackingController) DischargeIntegral(dt time.Duration) {
-	c.State.IntegralError = 0.0
+	c.State.ControlErrorIntegral = 0.0
 	c.State.IntegralState = math.Max(
 		0,
 		math.Min(1-dt.Seconds()*c.Config.IntegralPartDecreaseFactor, 1.0),

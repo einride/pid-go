@@ -21,7 +21,7 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 	// Check output value when output increase is needed
 	assert.Equal(t, float64(50), pidControl.Update(reference, 0, time.Second/10))
 	// Check proportional error
-	assert.Equal(t, float64(10), pidControl.State.ErrorSize)
+	assert.Equal(t, float64(10), pidControl.State.ControlError)
 }
 
 func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
@@ -38,7 +38,7 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 	// Check output value when output value decrease is needed
 	assert.Equal(t, float64(0), pidControl.Update(reference, 10, time.Second/10))
 	// Check proportional error
-	assert.Equal(t, float64(0), pidControl.State.ErrorSize)
+	assert.Equal(t, float64(0), pidControl.State.ControlError)
 }
 
 func TestSimpleController_Reset(t *testing.T) {
@@ -51,9 +51,9 @@ func TestSimpleController_Reset(t *testing.T) {
 			MaxOutput:        50,
 		},
 		State: ControllerState{
-			ErrorOverTime: 10,
-			ErrorRate:     10,
-			ErrorSize:     10,
+			ControlErrorIntegral:   10,
+			ControlErrorDerivative: 10,
+			ControlError:           10,
 		},
 	}
 	// And a duplicate Controller with empty values

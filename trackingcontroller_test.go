@@ -20,25 +20,25 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
-		expectedState  trackingState
+		expectedState  trackingControllerState
 		expectedOutput float64
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      1.0,
-			expectedState:  trackingState{e: 1.0, eI: 1.0, uI: 0.0, uD: 0.0, uV: 1.0},
+			expectedState:  trackingControllerState{e: 1.0, eI: 1.0, uI: 0.0, uD: 0.0, uV: 1.0},
 			expectedOutput: 1.0,
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      50.0,
-			expectedState:  trackingState{e: 50.0, eI: 50.0, uI: 0.0, uD: 0.0, uV: 50.0},
+			expectedState:  trackingControllerState{e: 50.0, eI: 50.0, uI: 0.0, uD: 0.0, uV: 50.0},
 			expectedOutput: 10.0,
 		},
 		{
 			measuredOutput: 0.0,
 			reference:      -50.0,
-			expectedState:  trackingState{e: -50.0, eI: -50.0, uI: 0.0, uD: 0.0, uV: -50.0},
+			expectedState:  trackingControllerState{e: -50.0, eI: -50.0, uI: 0.0, uD: 0.0, uV: -50.0},
 			expectedOutput: -10.0,
 		},
 	} {
@@ -53,7 +53,7 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 func TestTrackingController_Reset(t *testing.T) {
 	// Given a SaturatedPIDController with stored values not equal to 0
 	c := &TrackingController{}
-	c.state = trackingState{
+	c.state = trackingControllerState{
 		e:  5,
 		uI: 5,
 		uD: 5,
@@ -63,7 +63,7 @@ func TestTrackingController_Reset(t *testing.T) {
 	// When resetting stored values
 	c.Reset()
 	// Then
-	assert.Equal(t, trackingState{}, c.state)
+	assert.Equal(t, trackingControllerState{}, c.state)
 }
 
 func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
@@ -78,7 +78,7 @@ func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
 		MinOutput:                  -10,
 		MaxOutput:                  10,
 	}
-	c.state = trackingState{
+	c.state = trackingControllerState{
 		e:  5,
 		uI: 1000,
 		uD: 500,
@@ -88,5 +88,5 @@ func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
 	// When offloading the integral term
 	c.DischargeIntegral(dtTest)
 	// Then
-	assert.Equal(t, c.state, trackingState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, uV: 1.0})
+	assert.Equal(t, c.state, trackingControllerState{e: 5, eI: 0.0, uI: 999.0, uD: 500.0, uV: 1.0})
 }

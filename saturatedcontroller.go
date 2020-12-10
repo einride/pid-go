@@ -33,10 +33,10 @@ type SaturatedController struct {
 	// MinOutput is the min output from the PID.
 	MinOutput float64
 
-	state saturatedState
+	state saturatedControllerState
 }
 
-type saturatedState struct {
+type saturatedControllerState struct {
 	e  float64
 	eI float64
 	uI float64
@@ -45,7 +45,7 @@ type saturatedState struct {
 }
 
 func (c *SaturatedController) Reset() {
-	c.state = saturatedState{}
+	c.state = saturatedControllerState{}
 }
 
 func (c *SaturatedController) Update(target float64, actual float64, ff float64, dt time.Duration) float64 {

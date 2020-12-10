@@ -10,7 +10,7 @@ import (
 func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 	// Given a pidControl with reference value and update interval, dt
 	reference := float64(10)
-	pidControl := SimpleController{
+	pidControl := Controller{
 		ProportionalGain: 2.0,
 		IntegralGain:     1.0,
 		DerivativeGain:   1.0,
@@ -25,7 +25,7 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 	// Given a pidControl with reference output and update interval, dt
 	reference := float64(10)
-	pidControl := SimpleController{
+	pidControl := Controller{
 		ProportionalGain: 2.0,
 		IntegralGain:     1.0,
 		DerivativeGain:   1.0,
@@ -38,20 +38,20 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 }
 
 func TestSimpleController_Reset(t *testing.T) {
-	// Given a SimpleController with stored values not equal to 0
-	c := &SimpleController{
+	// Given a Controller with stored values not equal to 0
+	c := &Controller{
 		ProportionalGain: 2.0,
 		IntegralGain:     1.0,
 		DerivativeGain:   1.0,
 		MaxOutput:        50,
-		state: simpleState{
+		state: controllerState{
 			errorOverTime: 10,
 			errorRate:     10,
 			errorSize:     10,
 		},
 	}
-	// And a duplicate SimpleController with empty values
-	expectedController := &SimpleController{
+	// And a duplicate Controller with empty values
+	expectedController := &Controller{
 		ProportionalGain: 2.0,
 		IntegralGain:     1.0,
 		DerivativeGain:   1.0,

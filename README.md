@@ -1,4 +1,8 @@
-# PID-Go
+# PID Go
+
+<p align="center">
+  <img src="./doc/pid-go.svg" alt="logo"/>
+</p>
 
 PID controllers for Go.
 

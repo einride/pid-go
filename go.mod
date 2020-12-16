@@ -1,4 +1,4 @@
-module github.com/einride/pid-go
+module go.einride.tech/pid
 
 go 1.13
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/einride/pid-go"
+	"go.einride.tech/pid"
 )
 
 func ExampleController() {

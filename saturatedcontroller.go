@@ -5,16 +5,17 @@ import (
 	"time"
 )
 
-// SaturatedController implements a PIDT1-controller with feed forward term, a saturated control output and anti-windup.
+// SaturatedController implements a PID-controller with low-pass filter of the derivative term,
+// feed forward term, a saturated control output and anti-windup.
 //
-// The DT1-part behaves much like a D-part up to a tunable cut-off frequency.
-//
-// The anti-windup mechanism uses a tracking mode as defined in Chapter 6 of Åström and Murray, Feedback Systems:
-// An Introduction to Scientists and Engineers, 2008
-// (https://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf)
+// The anti-windup mechanism uses an actuator saturation model as defined in Chapter 6 of Åström and Murray,
+// Feedback Systems: An Introduction to Scientists and Engineers, 2008
+// (http://www.cds.caltech.edu/~murray/amwiki)
 type SaturatedController struct {
+	// Config for the SaturatedController.
 	Config SaturatedControllerConfig
-	State  SaturatedControllerState
+	// State of the SaturatedController.
+	State SaturatedControllerState
 }
 
 // SaturatedControllerConfig contains config parameters for a SaturatedController.
@@ -27,8 +28,8 @@ type SaturatedControllerConfig struct {
 	DerivativeGain float64
 	// AntiWindUpGain is the anti-windup tracking gain.
 	AntiWindUpGain float64
-	// Inverse of the time constant to discharge the integral part of the PID controller [1/s]
-	IntegralPartDecreaseFactor float64
+	// Inverse of the time constant to discharge the integral part of the PID controller (1/s)
+	IntegralPartDischargeFactor float64
 	// LowPassTimeConstant is the D part low-pass filter time constant => cut-off frequency 1/LowPassTimeConstant.
 	LowPassTimeConstant time.Duration
 	// MaxOutput is the max output from the PID.
@@ -41,12 +42,12 @@ type SaturatedControllerConfig struct {
 type SaturatedControllerState struct {
 	// ControlError is the difference between reference and current value.
 	ControlError float64
-	// ControlErrorIntegral is the integrated control error over time.
+	// ControlErrorIntegrand is the control error integrand, which includes the anti-windup correction.
+	ControlErrorIntegrand float64
+	// ControlErrorIntegral is the control error integrand integrated over time.
 	ControlErrorIntegral float64
-	// TODO: Document me.
-	IntegralState float64
-	// TODO: Document me.
-	DerivativeState float64
+	// ControlErrorDerivative is the low-pass filtered time-derivative of the control error.
+	ControlErrorDerivative float64
 	// ControlSignal is the current control signal output of the controller.
 	ControlSignal float64
 }
@@ -57,27 +58,30 @@ func (c *SaturatedController) Reset() {
 }
 
 // Update the controller state.
-func (c *SaturatedController) Update(target float64, actual float64, ff float64, dt time.Duration) float64 {
-	e := target - actual
-	uP := e * c.Config.ProportionalGain
-	uI := c.State.ControlErrorIntegral*c.Config.IntegralGain*dt.Seconds() + c.State.IntegralState
-	uD := ((c.Config.DerivativeGain/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
-		c.State.DerivativeState) /
-		(dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
-	uV := uP + uI + uD + ff
-	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, uV))
-	c.State.ControlErrorIntegral = e + c.Config.AntiWindUpGain*(c.State.ControlSignal-uV)
-	c.State.IntegralState = uI
-	c.State.DerivativeState = uD
+func (c *SaturatedController) Update(
+	referenceSignal float64,
+	actualSignal float64,
+	feedForwardSignal float64,
+	dt time.Duration,
+) {
+	e := referenceSignal - actualSignal
+	controlErrorIntegral := c.State.ControlErrorIntegrand*dt.Seconds() + c.State.ControlErrorIntegral
+	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
+		c.State.ControlErrorDerivative) / (dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
+	u := e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +
+		c.Config.DerivativeGain*controlErrorDerivative + feedForwardSignal
+	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
+	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(c.State.ControlSignal-u)
+	c.State.ControlErrorIntegral = controlErrorIntegral
+	c.State.ControlErrorDerivative = controlErrorDerivative
 	c.State.ControlError = e
-	return c.State.ControlSignal
 }
 
 // TODO: Document me.
 func (c *SaturatedController) DischargeIntegral(dt time.Duration) {
-	c.State.ControlErrorIntegral = 0.0
-	c.State.IntegralState = math.Max(
+	c.State.ControlErrorIntegrand = 0.0
+	c.State.ControlErrorIntegral = math.Max(
 		0,
-		math.Min(1-dt.Seconds()*c.Config.IntegralPartDecreaseFactor, 1.0),
-	) * c.State.IntegralState
+		math.Min(1-dt.Seconds()*c.Config.IntegralPartDischargeFactor, 1.0),
+	) * c.State.ControlErrorIntegral
 }

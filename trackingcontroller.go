@@ -5,15 +5,13 @@ import (
 	"time"
 )
 
-// TrackingController implements a PIDT1 controller with feed forward term, anti-windup and bumpless
-// transfer using tracking mode control.
-//
-// The DT1-part behaves much like a D-part up to a tunable cut-off frequency.
+// TrackingController implements a PID-controller with low-pass filter of the derivative term,
+// feed forward term, anti-windup and bumpless transfer using tracking mode control.
 //
 // The anti-windup and bumpless transfer mechanisms use a tracking mode as defined in
 // Chapter 6 of Åström and Murray, Feedback Systems:
 // An Introduction to Scientists and Engineers, 2008
-// (https://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf)
+// (http://www.cds.caltech.edu/~murray/amwiki)
 type TrackingController struct {
 	// Config for the TrackingController.
 	Config TrackingControllerConfig
@@ -31,8 +29,8 @@ type TrackingControllerConfig struct {
 	DerivativeGain float64
 	// AntiWindUpGain is the anti-windup tracking gain.
 	AntiWindUpGain float64
-	// Inverse of the time constant to discharge the integral part of the PID controller (GO-button released) [1/s]
-	IntegralPartDecreaseFactor float64
+	// Inverse of the time constant to discharge the integral part of the PID controller (1/s)
+	IntegralPartDischargeFactor float64
 	// LowPassTimeConstant is the D part low-pass filter time constant => cut-off frequency 1/LowPassTimeConstant.
 	LowPassTimeConstant time.Duration
 	// MaxOutput is the max output from the PID.
@@ -45,14 +43,17 @@ type TrackingControllerConfig struct {
 type TrackingControllerState struct {
 	// ControlError is the difference between reference and current value.
 	ControlError float64
-	// ControlErrorIntegral is the integrated control error over time.
+	// ControlErrorIntegrand is the integrated control error over time.
+	ControlErrorIntegrand float64
+	// ControlErrorIntegral is the control error integrand integrated over time.
 	ControlErrorIntegral float64
-	// TODO: Document me.
-	IntegralState float64
-	// TODO: Document me.
-	DerivativeState float64
+	// ControlErrorDerivative is the low-pass filtered time-derivative of the control error.
+	ControlErrorDerivative float64
 	// ControlSignal is the current control signal output of the controller.
 	ControlSignal float64
+	// UnsaturatedControlSignal is the control signal before saturation used for tracking the
+	// actual control signal for bumpless transfer or compensation of un-modeled saturations.
+	UnsaturatedControlSignal float64
 }
 
 // Reset the controller state.
@@ -62,32 +63,31 @@ func (c *TrackingController) Reset() {
 
 // Update the controller state.
 func (c *TrackingController) Update(
-	target float64,
-	actual float64,
-	ff float64,
-	actualInput float64,
+	referenceSignal float64,
+	actualSignal float64,
+	feedForwardSignal float64,
+	appliedControlSignal float64,
 	dt time.Duration,
-) float64 {
-	e := target - actual
-	uP := e * c.Config.ProportionalGain
-	uI := c.State.ControlErrorIntegral*c.Config.IntegralGain*dt.Seconds() + c.State.IntegralState
-	uD := ((c.Config.DerivativeGain/c.Config.LowPassTimeConstant.Seconds())*
-		(e-c.State.ControlError) + c.State.DerivativeState) /
-		(dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
-	uV := uP + uI + uD + ff
-	c.State.ControlErrorIntegral = e + c.Config.AntiWindUpGain*(actualInput-c.State.ControlSignal)
-	c.State.IntegralState = uI
-	c.State.DerivativeState = uD
-	c.State.ControlSignal = uV
+) {
+	e := referenceSignal - actualSignal
+	controlErrorIntegral := c.State.ControlErrorIntegrand*dt.Seconds() + c.State.ControlErrorIntegral
+	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
+		c.State.ControlErrorDerivative) / (dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
+	u := e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +
+		c.Config.DerivativeGain*controlErrorDerivative + feedForwardSignal
+	c.State.UnsaturatedControlSignal = u
+	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
+	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(appliedControlSignal-c.State.UnsaturatedControlSignal)
+	c.State.ControlErrorIntegral = controlErrorIntegral
+	c.State.ControlErrorDerivative = controlErrorDerivative
 	c.State.ControlError = e
-	return math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, uV))
 }
 
 // TODO: Document me.
 func (c *TrackingController) DischargeIntegral(dt time.Duration) {
-	c.State.ControlErrorIntegral = 0.0
-	c.State.IntegralState = math.Max(
+	c.State.ControlErrorIntegrand = 0.0
+	c.State.ControlErrorIntegral = math.Max(
 		0,
-		math.Min(1-dt.Seconds()*c.Config.IntegralPartDecreaseFactor, 1.0),
-	) * c.State.IntegralState
+		math.Min(1-dt.Seconds()*c.Config.IntegralPartDischargeFactor, 1.0),
+	) * c.State.ControlErrorIntegral
 }

@@ -38,9 +38,9 @@ type ControllerState struct {
 }
 
 // Update the controller state.
-func (s *Controller) Update(reference float64, current float64, dt time.Duration) float64 {
+func (s *Controller) Update(referenceSignal float64, actualSignal float64, dt time.Duration) float64 {
 	previousError := s.State.ControlError
-	s.State.ControlError = reference - current
+	s.State.ControlError = referenceSignal - actualSignal
 	s.State.ControlErrorDerivative = (s.State.ControlError - previousError) / dt.Seconds()
 	s.State.ControlErrorIntegral += s.State.ControlError * dt.Seconds()
 	s.State.ControlSignal = math.Max(s.Config.MinOutput, math.Min(s.Config.MaxOutput, s.output()))

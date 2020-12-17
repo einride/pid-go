@@ -46,13 +46,13 @@ _[Reference ≫](https://en.wikipedia.org/wiki/PID_controller)_
 
 ### `pid.SaturatedController`
 
-A PIDT1-controller with feed forward term, a saturated control output and anti-windup.
+A PID-controller with low-pass filtering of the derivative term, feed forward term, a saturated control output and anti-windup.
 
 _[Reference ≫][astrom]_
 
 ### `pid.TrackingController`
 
-a PIDT1 controller with feed forward term, anti-windup and bumpless
+a PID-controller with low-pass filtering of the derivative term, feed forward term, anti-windup and bumpless
 transfer using tracking mode control.
 
 _[Reference ≫][astrom]_

@@ -5,21 +5,21 @@ import (
 	"time"
 )
 
-// SaturatedController implements a PID-controller with low-pass filter of the derivative term,
+// AntiWindupController implements a PID-controller with low-pass filter of the derivative term,
 // feed forward term, a saturated control output and anti-windup.
 //
 // The anti-windup mechanism uses an actuator saturation model as defined in Chapter 6 of Åström and Murray,
 // Feedback Systems: An Introduction to Scientists and Engineers, 2008
 // (http://www.cds.caltech.edu/~murray/amwiki)
-type SaturatedController struct {
-	// Config for the SaturatedController.
-	Config SaturatedControllerConfig
-	// State of the SaturatedController.
-	State SaturatedControllerState
+type AntiWindupController struct {
+	// Config for the AntiWindupController.
+	Config AntiWindupControllerConfig
+	// State of the AntiWindupController.
+	State AntiWindupControllerState
 }
 
-// SaturatedControllerConfig contains config parameters for a SaturatedController.
-type SaturatedControllerConfig struct {
+// AntiWindupControllerConfig contains config parameters for a AntiWindupController.
+type AntiWindupControllerConfig struct {
 	// ProportionalGain is the P part gain.
 	ProportionalGain float64
 	// IntegralGain is the I part gain.
@@ -38,8 +38,8 @@ type SaturatedControllerConfig struct {
 	MinOutput float64
 }
 
-// SaturatedControllerState holds mutable state for a SaturatedController.
-type SaturatedControllerState struct {
+// AntiWindupControllerState holds mutable state for a AntiWindupController.
+type AntiWindupControllerState struct {
 	// ControlError is the difference between reference and current value.
 	ControlError float64
 	// ControlErrorIntegrand is the control error integrand, which includes the anti-windup correction.
@@ -53,12 +53,12 @@ type SaturatedControllerState struct {
 }
 
 // Reset the controller state.
-func (c *SaturatedController) Reset() {
-	c.State = SaturatedControllerState{}
+func (c *AntiWindupController) Reset() {
+	c.State = AntiWindupControllerState{}
 }
 
 // Update the controller state.
-func (c *SaturatedController) Update(
+func (c *AntiWindupController) Update(
 	referenceSignal float64,
 	actualSignal float64,
 	feedForwardSignal float64,
@@ -78,7 +78,7 @@ func (c *SaturatedController) Update(
 }
 
 // TODO: Document me.
-func (c *SaturatedController) DischargeIntegral(dt time.Duration) {
+func (c *AntiWindupController) DischargeIntegral(dt time.Duration) {
 	c.State.ControlErrorIntegrand = 0.0
 	c.State.ControlErrorIntegral = math.Max(
 		0,

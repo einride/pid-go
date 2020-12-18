@@ -15,8 +15,8 @@ const (
 
 func TestSaturatedController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
-	c := &SaturatedController{
-		Config: SaturatedControllerConfig{
+	c := &AntiWindupController{
+		Config: AntiWindupControllerConfig{
 			LowPassTimeConstant:         1 * time.Second,
 			ProportionalGain:            1,
 			IntegralPartDischargeFactor: 0.1,
@@ -55,8 +55,8 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 
 func TestSaturatedController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
-	c := &SaturatedController{
-		Config: SaturatedControllerConfig{
+	c := &AntiWindupController{
+		Config: AntiWindupControllerConfig{
 			LowPassTimeConstant:         1 * time.Second,
 			DerivativeGain:              0.01,
 			ProportionalGain:            1,
@@ -70,12 +70,12 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 	for _, tt := range []struct {
 		measuredOutput float64
 		reference      float64
-		expectedState  SaturatedControllerState
+		expectedState  AntiWindupControllerState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
-			expectedState: SaturatedControllerState{
+			expectedState: AntiWindupControllerState{
 				ControlError:           0.0,
 				ControlSignal:          5.0,
 				ControlErrorIntegrand:  0.0,
@@ -102,8 +102,8 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 
 func TestSaturatedPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
-	c := &SaturatedController{
-		Config: SaturatedControllerConfig{
+	c := &AntiWindupController{
+		Config: AntiWindupControllerConfig{
 			LowPassTimeConstant:         1 * time.Second,
 			IntegralGain:                10,
 			IntegralPartDischargeFactor: 0.1,
@@ -115,13 +115,13 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 		measuredOutput float64
 		reference      float64
 		feedForward    float64
-		expectedState  SaturatedControllerState
+		expectedState  AntiWindupControllerState
 	}{
 		{
 			measuredOutput: 0.0,
 			reference:      5.0,
 			feedForward:    2.0,
-			expectedState: SaturatedControllerState{
+			expectedState: AntiWindupControllerState{
 				ControlError:         0.0,
 				ControlSignal:        5.0,
 				ControlErrorIntegral: 0.5 - 0.2,
@@ -131,7 +131,7 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 			measuredOutput: 0.0,
 			reference:      5.0,
 			feedForward:    15.0,
-			expectedState: SaturatedControllerState{
+			expectedState: AntiWindupControllerState{
 				ControlError:         0.0,
 				ControlSignal:        5.0,
 				ControlErrorIntegral: 0.5 - 1.5,
@@ -155,8 +155,8 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 
 func TestSaturatedController_Reset(t *testing.T) {
 	// Given a SaturatedPIDController with stored values not equal to 0
-	c := &SaturatedController{}
-	c.State = SaturatedControllerState{
+	c := &AntiWindupController{}
+	c.State = AntiWindupControllerState{
 		ControlError:           5,
 		ControlErrorIntegral:   5,
 		ControlErrorDerivative: 5,
@@ -166,13 +166,13 @@ func TestSaturatedController_Reset(t *testing.T) {
 	// When resetting stored values
 	c.Reset()
 	// Then
-	assert.Equal(t, SaturatedControllerState{}, c.State)
+	assert.Equal(t, AntiWindupControllerState{}, c.State)
 }
 
 func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
 	// Given a saturated PID controller
-	c := &SaturatedController{
-		Config: SaturatedControllerConfig{
+	c := &AntiWindupController{
+		Config: AntiWindupControllerConfig{
 			LowPassTimeConstant:         1 * time.Second,
 			ProportionalGain:            1,
 			DerivativeGain:              10,
@@ -183,7 +183,7 @@ func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
 			MaxOutput:                   10,
 		},
 	}
-	c.State = SaturatedControllerState{
+	c.State = AntiWindupControllerState{
 		ControlError:           5,
 		ControlErrorIntegral:   1000,
 		ControlErrorDerivative: 500,
@@ -192,7 +192,7 @@ func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
 	}
 	// When offloading the integral term
 	c.DischargeIntegral(dtTest)
-	expected := SaturatedControllerState{
+	expected := AntiWindupControllerState{
 		ControlError:           5,
 		ControlErrorIntegrand:  0.0,
 		ControlErrorIntegral:   999.0,

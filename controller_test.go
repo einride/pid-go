@@ -15,11 +15,10 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 			ProportionalGain: 2.0,
 			IntegralGain:     1.0,
 			DerivativeGain:   1.0,
-			MaxOutput:        50,
 		},
 	}
 	// Check output value when output increase is needed
-	assert.Equal(t, float64(50), pidControl.Update(reference, 0, time.Second/10))
+	assert.Equal(t, float64(121), pidControl.Update(reference, 0, time.Second/10))
 	// Check proportional error
 	assert.Equal(t, float64(10), pidControl.State.ControlError)
 }
@@ -32,7 +31,6 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 			ProportionalGain: 2.0,
 			IntegralGain:     1.0,
 			DerivativeGain:   1.0,
-			MaxOutput:        50,
 		},
 	}
 	// Check output value when output value decrease is needed
@@ -48,7 +46,6 @@ func TestSimpleController_Reset(t *testing.T) {
 			ProportionalGain: 2.0,
 			IntegralGain:     1.0,
 			DerivativeGain:   1.0,
-			MaxOutput:        50,
 		},
 		State: ControllerState{
 			ControlErrorIntegral:   10,
@@ -62,7 +59,6 @@ func TestSimpleController_Reset(t *testing.T) {
 			ProportionalGain: 2.0,
 			IntegralGain:     1.0,
 			DerivativeGain:   1.0,
-			MaxOutput:        50,
 		},
 	}
 	// When resetting stored values

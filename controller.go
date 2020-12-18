@@ -1,9 +1,6 @@
 package pid
 
-import (
-	"math"
-	"time"
-)
+import "time"
 
 // Controller implements a basic PID controller.
 type Controller struct {
@@ -19,10 +16,6 @@ type ControllerConfig struct {
 	IntegralGain float64
 	// DerivativeGain decreases the sensitivity to large reference changes.
 	DerivativeGain float64
-	// MinOutput sets an lower limit to the allowed output.
-	MinOutput float64
-	// MaxOutput sets an upper limit to the allowed output.
-	MaxOutput float64
 }
 
 // ControllerState holds mutable state for a Controller.
@@ -43,18 +36,13 @@ func (s *Controller) Update(referenceSignal float64, actualSignal float64, dt ti
 	s.State.ControlError = referenceSignal - actualSignal
 	s.State.ControlErrorDerivative = (s.State.ControlError - previousError) / dt.Seconds()
 	s.State.ControlErrorIntegral += s.State.ControlError * dt.Seconds()
-	s.State.ControlSignal = math.Max(s.Config.MinOutput, math.Min(s.Config.MaxOutput, s.output()))
+	s.State.ControlSignal = s.Config.ProportionalGain*s.State.ControlError +
+		s.Config.IntegralGain*s.State.ControlErrorIntegral +
+		s.Config.DerivativeGain*s.State.ControlErrorDerivative
 	return s.State.ControlSignal
 }
 
 // Reset the controller state.
 func (s *Controller) Reset() {
 	s.State = ControllerState{}
-}
-
-// output calculates the necessary output to maintain or reach a reference.
-func (s *Controller) output() float64 {
-	return s.Config.ProportionalGain*s.State.ControlError +
-		s.Config.IntegralGain*s.State.ControlErrorIntegral +
-		s.Config.DerivativeGain*s.State.ControlErrorDerivative
 }

@@ -14,7 +14,6 @@ func ExampleController() {
 			ProportionalGain: 2.0,
 			IntegralGain:     1.0,
 			DerivativeGain:   1.0,
-			MaxOutput:        50,
 		},
 	}
 	// Update the PID controller.
@@ -24,6 +23,6 @@ func ExampleController() {
 	c.Reset()
 	fmt.Printf("%+v\n", c.State)
 	// Output:
-	// {ControlError:10 ControlErrorIntegral:1 ControlErrorDerivative:100 ControlSignal:50}
+	// {ControlError:10 ControlErrorIntegral:1 ControlErrorDerivative:100 ControlSignal:121}
 	// {ControlError:0 ControlErrorIntegral:0 ControlErrorDerivative:0 ControlSignal:0}
 }

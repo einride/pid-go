@@ -17,11 +17,11 @@ func TestAntiWindupController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
-			LowPassTimeConstant:         1 * time.Second,
-			ProportionalGain:            1,
-			IntegralPartDischargeFactor: 0.1,
-			MinOutput:                   -10,
-			MaxOutput:                   10,
+			LowPassTimeConstant:           1 * time.Second,
+			ProportionalGain:              1,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
 		},
 	}
 	for _, tt := range []struct {
@@ -65,14 +65,14 @@ func TestAntiWindupController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
-			LowPassTimeConstant:         1 * time.Second,
-			DerivativeGain:              0.01,
-			ProportionalGain:            1,
-			IntegralGain:                10,
-			AntiWindUpGain:              10,
-			IntegralPartDischargeFactor: 0.1,
-			MinOutput:                   -10,
-			MaxOutput:                   10,
+			LowPassTimeConstant:           1 * time.Second,
+			DerivativeGain:                0.01,
+			ProportionalGain:              1,
+			IntegralGain:                  10,
+			AntiWindUpGain:                10,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
 		},
 	}
 	for _, tt := range []struct {
@@ -119,11 +119,11 @@ func TestAntiWindupPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
-			LowPassTimeConstant:         1 * time.Second,
-			IntegralGain:                10,
-			IntegralPartDischargeFactor: 0.1,
-			MinOutput:                   -10,
-			MaxOutput:                   10,
+			LowPassTimeConstant:           1 * time.Second,
+			IntegralGain:                  10,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
 		},
 	}
 	for _, tt := range []struct {
@@ -197,14 +197,14 @@ func TestAntiWindupController_OffloadIntegralTerm(t *testing.T) {
 	// Given a saturated PID controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
-			LowPassTimeConstant:         1 * time.Second,
-			ProportionalGain:            1,
-			DerivativeGain:              10,
-			IntegralGain:                0.01,
-			AntiWindUpGain:              0.5,
-			IntegralPartDischargeFactor: 0.1,
-			MinOutput:                   -10,
-			MaxOutput:                   10,
+			LowPassTimeConstant:           1 * time.Second,
+			ProportionalGain:              1,
+			DerivativeGain:                10,
+			IntegralGain:                  0.01,
+			AntiWindUpGain:                0.5,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
 		},
 	}
 	c.State = AntiWindupControllerState{

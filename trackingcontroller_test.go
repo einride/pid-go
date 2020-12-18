@@ -11,12 +11,12 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 	// Given a tracking P controller
 	c := &TrackingController{
 		Config: TrackingControllerConfig{
-			LowPassTimeConstant:         1 * time.Second,
-			ProportionalGain:            1,
-			AntiWindUpGain:              0,
-			IntegralPartDischargeFactor: 0.1,
-			MinOutput:                   -10,
-			MaxOutput:                   10,
+			LowPassTimeConstant:           1 * time.Second,
+			ProportionalGain:              1,
+			AntiWindUpGain:                0,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
 		},
 	}
 	for _, tt := range []struct {
@@ -98,14 +98,14 @@ func TestTrackingController_OffloadIntegralTerm(t *testing.T) {
 	// Given a tracking PID controller
 	c := &TrackingController{
 		Config: TrackingControllerConfig{
-			LowPassTimeConstant:         1 * time.Second,
-			ProportionalGain:            1,
-			DerivativeGain:              10,
-			IntegralGain:                0.01,
-			AntiWindUpGain:              0.5,
-			IntegralPartDischargeFactor: 0.1,
-			MinOutput:                   -10,
-			MaxOutput:                   10,
+			LowPassTimeConstant:           1 * time.Second,
+			ProportionalGain:              1,
+			DerivativeGain:                10,
+			IntegralGain:                  0.01,
+			AntiWindUpGain:                0.5,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
 		},
 	}
 	c.State = TrackingControllerState{

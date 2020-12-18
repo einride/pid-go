@@ -29,8 +29,8 @@ type TrackingControllerConfig struct {
 	DerivativeGain float64
 	// AntiWindUpGain is the anti-windup tracking gain.
 	AntiWindUpGain float64
-	// Inverse of the time constant to discharge the integral part of the PID controller (1/s)
-	IntegralPartDischargeFactor float64
+	// IntegralDischargeTimeConstant is the time constant to discharge the integral state of the PID controller (s)
+	IntegralDischargeTimeConstant float64
 	// LowPassTimeConstant is the D part low-pass filter time constant => cut-off frequency 1/LowPassTimeConstant.
 	LowPassTimeConstant time.Duration
 	// MaxOutput is the max output from the PID.
@@ -93,11 +93,12 @@ func (c *TrackingController) Update(input TrackingControllerInput) {
 	c.State.ControlError = e
 }
 
-// TODO: Document me.
+// DischargeIntegral provides the ability to discharge the controller integral state
+// over a configurable period of time.
 func (c *TrackingController) DischargeIntegral(dt time.Duration) {
 	c.State.ControlErrorIntegrand = 0.0
 	c.State.ControlErrorIntegral = math.Max(
 		0,
-		math.Min(1-dt.Seconds()*c.Config.IntegralPartDischargeFactor, 1.0),
+		math.Min(1-dt.Seconds()/c.Config.IntegralDischargeTimeConstant, 1.0),
 	) * c.State.ControlErrorIntegral
 }

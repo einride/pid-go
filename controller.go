@@ -30,12 +30,22 @@ type ControllerState struct {
 	ControlSignal float64
 }
 
+// ControllerInput holds the input parameters to a Controller.
+type ControllerInput struct {
+	// TODO: Document me.
+	ReferenceSignal float64
+	// TODO: Document me.
+	ActualSignal float64
+	// TODO: Document me.
+	SamplingInterval time.Duration
+}
+
 // Update the controller state.
-func (s *Controller) Update(referenceSignal float64, actualSignal float64, dt time.Duration) float64 {
+func (s *Controller) Update(input ControllerInput) float64 {
 	previousError := s.State.ControlError
-	s.State.ControlError = referenceSignal - actualSignal
-	s.State.ControlErrorDerivative = (s.State.ControlError - previousError) / dt.Seconds()
-	s.State.ControlErrorIntegral += s.State.ControlError * dt.Seconds()
+	s.State.ControlError = input.ReferenceSignal - input.ActualSignal
+	s.State.ControlErrorDerivative = (s.State.ControlError - previousError) / input.SamplingInterval.Seconds()
+	s.State.ControlErrorIntegral += s.State.ControlError * input.SamplingInterval.Seconds()
 	s.State.ControlSignal = s.Config.ProportionalGain*s.State.ControlError +
 		s.Config.IntegralGain*s.State.ControlErrorIntegral +
 		s.Config.DerivativeGain*s.State.ControlErrorDerivative

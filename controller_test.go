@@ -9,7 +9,6 @@ import (
 
 func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 	// Given a pidControl with reference value and update interval, dt
-	reference := float64(10)
 	pidControl := Controller{
 		Config: ControllerConfig{
 			ProportionalGain: 2.0,
@@ -18,14 +17,17 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 		},
 	}
 	// Check output value when output increase is needed
-	assert.Equal(t, float64(121), pidControl.Update(reference, 0, time.Second/10))
+	assert.Equal(t, float64(121), pidControl.Update(ControllerInput{
+		ReferenceSignal:  10,
+		ActualSignal:     0,
+		SamplingInterval: 100 * time.Millisecond,
+	}))
 	// Check proportional error
 	assert.Equal(t, float64(10), pidControl.State.ControlError)
 }
 
 func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 	// Given a pidControl with reference output and update interval, dt
-	reference := float64(10)
 	pidControl := Controller{
 		Config: ControllerConfig{
 			ProportionalGain: 2.0,
@@ -34,7 +36,11 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 		},
 	}
 	// Check output value when output value decrease is needed
-	assert.Equal(t, float64(0), pidControl.Update(reference, 10, time.Second/10))
+	assert.Equal(t, float64(0), pidControl.Update(ControllerInput{
+		ReferenceSignal:  10,
+		ActualSignal:     10,
+		SamplingInterval: 100 * time.Millisecond,
+	}))
 	// Check proportional error
 	assert.Equal(t, float64(0), pidControl.State.ControlError)
 }

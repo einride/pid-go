@@ -17,7 +17,11 @@ func ExampleController() {
 		},
 	}
 	// Update the PID controller.
-	c.Update(10, 0, 100*time.Millisecond)
+	c.Update(pid.ControllerInput{
+		ReferenceSignal:  10,
+		ActualSignal:     0,
+		SamplingInterval: 100 * time.Millisecond,
+	})
 	fmt.Printf("%+v\n", c.State)
 	// Reset the PID controller.
 	c.Reset()

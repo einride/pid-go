@@ -13,7 +13,7 @@ const (
 	deltaTest = 1e-3
 )
 
-func TestSaturatedController_PControllerUpdate(t *testing.T) {
+func TestAntiWindupController_PControllerUpdate(t *testing.T) {
 	// Given a saturated P controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
@@ -25,35 +25,43 @@ func TestSaturatedController_PControllerUpdate(t *testing.T) {
 		},
 	}
 	for _, tt := range []struct {
-		measuredOutput        float64
-		reference             float64
+		input                 AntiWindupControllerInput
 		expectedControlSignal float64
 	}{
 		{
-			measuredOutput:        0.0,
-			reference:             1.0,
+			input: AntiWindupControllerInput{
+				ReferenceSignal:  1.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedControlSignal: c.Config.ProportionalGain * 1.0,
 		},
 		{
-			measuredOutput:        0.0,
-			reference:             50.0,
+			input: AntiWindupControllerInput{
+				ReferenceSignal:  50.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedControlSignal: c.Config.MaxOutput,
 		},
 		{
-			measuredOutput:        0.0,
-			reference:             -50.0,
+			input: AntiWindupControllerInput{
+				ReferenceSignal:  -50.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedControlSignal: c.Config.MinOutput,
 		},
 	} {
 		tt := tt
 		// When
-		c.Update(tt.reference, tt.measuredOutput, 0.0, dtTest)
+		c.Update(tt.input)
 		// Then the controller state should be the expected
 		assert.Equal(t, tt.expectedControlSignal, c.State.ControlSignal)
 	}
 }
 
-func TestSaturatedController_PIDUpdate(t *testing.T) {
+func TestAntiWindupController_PIDUpdate(t *testing.T) {
 	// Given a saturated PID controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
@@ -68,13 +76,15 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 		},
 	}
 	for _, tt := range []struct {
-		measuredOutput float64
-		reference      float64
-		expectedState  AntiWindupControllerState
+		input         AntiWindupControllerInput
+		expectedState AntiWindupControllerState
 	}{
 		{
-			measuredOutput: 0.0,
-			reference:      5.0,
+			input: AntiWindupControllerInput{
+				ReferenceSignal:  5.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedState: AntiWindupControllerState{
 				ControlError:           0.0,
 				ControlSignal:          5.0,
@@ -87,7 +97,12 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 		// When enough iterations have passed
 		c.Reset()
 		for i := 0; i < 500; i++ {
-			c.Update(tt.reference, c.State.ControlSignal, 0.0, dtTest)
+			c.Update(AntiWindupControllerInput{
+				ReferenceSignal:   tt.input.ReferenceSignal,
+				ActualSignal:      c.State.ControlSignal,
+				FeedForwardSignal: 0,
+				SamplingInterval:  tt.input.SamplingInterval,
+			})
 		}
 		// Then the controller I state only should give the expected output
 		assert.Assert(t, math.Abs(tt.expectedState.ControlError-c.State.ControlError) < deltaTest)
@@ -100,7 +115,7 @@ func TestSaturatedController_PIDUpdate(t *testing.T) {
 	}
 }
 
-func TestSaturatedPID_FFUpdate(t *testing.T) {
+func TestAntiWindupPID_FFUpdate(t *testing.T) {
 	// Given a saturated I controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{
@@ -112,15 +127,16 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 		},
 	}
 	for _, tt := range []struct {
-		measuredOutput float64
-		reference      float64
-		feedForward    float64
-		expectedState  AntiWindupControllerState
+		input         AntiWindupControllerInput
+		expectedState AntiWindupControllerState
 	}{
 		{
-			measuredOutput: 0.0,
-			reference:      5.0,
-			feedForward:    2.0,
+			input: AntiWindupControllerInput{
+				ReferenceSignal:   5.0,
+				ActualSignal:      0.0,
+				FeedForwardSignal: 2.0,
+				SamplingInterval:  dtTest,
+			},
 			expectedState: AntiWindupControllerState{
 				ControlError:         0.0,
 				ControlSignal:        5.0,
@@ -128,9 +144,12 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 			},
 		},
 		{
-			measuredOutput: 0.0,
-			reference:      5.0,
-			feedForward:    15.0,
+			input: AntiWindupControllerInput{
+				ReferenceSignal:   5.0,
+				ActualSignal:      0.0,
+				FeedForwardSignal: 15.0,
+				SamplingInterval:  dtTest,
+			},
 			expectedState: AntiWindupControllerState{
 				ControlError:         0.0,
 				ControlSignal:        5.0,
@@ -144,7 +163,12 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 		// Then the controller I state should compensate for difference between feed forward without
 		// violating saturation constraints.
 		for i := 0; i < 500; i++ {
-			c.Update(tt.reference, c.State.ControlSignal, tt.feedForward, dtTest)
+			c.Update(AntiWindupControllerInput{
+				ReferenceSignal:   tt.input.ReferenceSignal,
+				ActualSignal:      c.State.ControlSignal,
+				FeedForwardSignal: tt.input.FeedForwardSignal,
+				SamplingInterval:  tt.input.SamplingInterval,
+			})
 			assert.Assert(t, c.State.ControlSignal <= c.Config.MaxOutput)
 		}
 		assert.Assert(t, math.Abs(tt.expectedState.ControlError-c.State.ControlError) < deltaTest)
@@ -153,8 +177,8 @@ func TestSaturatedPID_FFUpdate(t *testing.T) {
 	}
 }
 
-func TestSaturatedController_Reset(t *testing.T) {
-	// Given a SaturatedPIDController with stored values not equal to 0
+func TestAntiWindupController_Reset(t *testing.T) {
+	// Given a AntiWindupPIDController with stored values not equal to 0
 	c := &AntiWindupController{}
 	c.State = AntiWindupControllerState{
 		ControlError:           5,
@@ -169,7 +193,7 @@ func TestSaturatedController_Reset(t *testing.T) {
 	assert.Equal(t, AntiWindupControllerState{}, c.State)
 }
 
-func TestSaturatedController_OffloadIntegralTerm(t *testing.T) {
+func TestAntiWindupController_OffloadIntegralTerm(t *testing.T) {
 	// Given a saturated PID controller
 	c := &AntiWindupController{
 		Config: AntiWindupControllerConfig{

@@ -56,28 +56,38 @@ type TrackingControllerState struct {
 	UnsaturatedControlSignal float64
 }
 
+// TrackingControllerInput holds the input parameters to a TrackingController.
+type TrackingControllerInput struct {
+	// TODO: Document me.
+	ReferenceSignal float64
+	// TODO: Document me.
+	ActualSignal float64
+	// TODO: Document me.
+	FeedForwardSignal float64
+	// TODO: Document me.
+	AppliedControlSignal float64
+	// TODO: Document me.
+	SamplingInterval time.Duration
+}
+
 // Reset the controller state.
 func (c *TrackingController) Reset() {
 	c.State = TrackingControllerState{}
 }
 
 // Update the controller state.
-func (c *TrackingController) Update(
-	referenceSignal float64,
-	actualSignal float64,
-	feedForwardSignal float64,
-	appliedControlSignal float64,
-	dt time.Duration,
-) {
-	e := referenceSignal - actualSignal
-	controlErrorIntegral := c.State.ControlErrorIntegrand*dt.Seconds() + c.State.ControlErrorIntegral
+func (c *TrackingController) Update(input TrackingControllerInput) {
+	e := input.ReferenceSignal - input.ActualSignal
+	controlErrorIntegral := c.State.ControlErrorIntegrand*input.SamplingInterval.Seconds() + c.State.ControlErrorIntegral
 	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
-		c.State.ControlErrorDerivative) / (dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
+		c.State.ControlErrorDerivative) / (input.SamplingInterval.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
 	u := e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +
-		c.Config.DerivativeGain*controlErrorDerivative + feedForwardSignal
+		c.Config.DerivativeGain*controlErrorDerivative + input.FeedForwardSignal
 	c.State.UnsaturatedControlSignal = u
 	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
-	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(appliedControlSignal-c.State.UnsaturatedControlSignal)
+	c.State.ControlErrorIntegrand =
+		e + c.Config.AntiWindUpGain*(input.AppliedControlSignal-
+			c.State.UnsaturatedControlSignal)
 	c.State.ControlErrorIntegral = controlErrorIntegral
 	c.State.ControlErrorDerivative = controlErrorDerivative
 	c.State.ControlError = e

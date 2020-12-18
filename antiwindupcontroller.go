@@ -52,24 +52,31 @@ type AntiWindupControllerState struct {
 	ControlSignal float64
 }
 
+// AntiWindupControllerInput holds the input parameters to an AntiWindupController.
+type AntiWindupControllerInput struct {
+	// TODO: Document me.
+	ReferenceSignal float64
+	// TODO: Document me.
+	ActualSignal float64
+	// TODO: Document me.
+	FeedForwardSignal float64
+	// TODO: Document me.
+	SamplingInterval time.Duration
+}
+
 // Reset the controller state.
 func (c *AntiWindupController) Reset() {
 	c.State = AntiWindupControllerState{}
 }
 
 // Update the controller state.
-func (c *AntiWindupController) Update(
-	referenceSignal float64,
-	actualSignal float64,
-	feedForwardSignal float64,
-	dt time.Duration,
-) {
-	e := referenceSignal - actualSignal
-	controlErrorIntegral := c.State.ControlErrorIntegrand*dt.Seconds() + c.State.ControlErrorIntegral
+func (c *AntiWindupController) Update(input AntiWindupControllerInput) {
+	e := input.ReferenceSignal - input.ActualSignal
+	controlErrorIntegral := c.State.ControlErrorIntegrand*input.SamplingInterval.Seconds() + c.State.ControlErrorIntegral
 	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
-		c.State.ControlErrorDerivative) / (dt.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
+		c.State.ControlErrorDerivative) / (input.SamplingInterval.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
 	u := e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +
-		c.Config.DerivativeGain*controlErrorDerivative + feedForwardSignal
+		c.Config.DerivativeGain*controlErrorDerivative + input.FeedForwardSignal
 	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
 	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(c.State.ControlSignal-u)
 	c.State.ControlErrorIntegral = controlErrorIntegral

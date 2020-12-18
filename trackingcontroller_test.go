@@ -20,13 +20,15 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 		},
 	}
 	for _, tt := range []struct {
-		measuredOutput float64
-		reference      float64
-		expectedState  TrackingControllerState
+		input         TrackingControllerInput
+		expectedState TrackingControllerState
 	}{
 		{
-			measuredOutput: 0.0,
-			reference:      1.0,
+			input: TrackingControllerInput{
+				ReferenceSignal:  1.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedState: TrackingControllerState{
 				ControlError:             1.0,
 				ControlErrorIntegrand:    1.0,
@@ -37,8 +39,11 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 			},
 		},
 		{
-			measuredOutput: 0.0,
-			reference:      50.0,
+			input: TrackingControllerInput{
+				ReferenceSignal:  50.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedState: TrackingControllerState{
 				ControlError:             50.0,
 				ControlErrorIntegrand:    50.0,
@@ -49,8 +54,11 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 			},
 		},
 		{
-			measuredOutput: 0.0,
-			reference:      -50.0,
+			input: TrackingControllerInput{
+				ReferenceSignal:  -50.0,
+				ActualSignal:     0.0,
+				SamplingInterval: dtTest,
+			},
 			expectedState: TrackingControllerState{
 				ControlError:             -50.0,
 				ControlErrorIntegrand:    -50.0,
@@ -63,7 +71,7 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 	} {
 		tt := tt
 		// When
-		c.Update(tt.reference, tt.measuredOutput, 0.0, 0.0, dtTest)
+		c.Update(tt.input)
 		// Then the controller state should be the expected
 		assert.Equal(t, tt.expectedState, c.State)
 		c.Reset()

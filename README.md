@@ -10,7 +10,7 @@ PID controllers for Go.
 
 ### `pid.Controller`
 
-A standard PID controller.
+A basic PID controller.
 
 ```go
 import (

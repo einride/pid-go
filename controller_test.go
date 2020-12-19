@@ -17,12 +17,12 @@ func TestSpeedControl_ControlLoop_OutputIncrease(t *testing.T) {
 		},
 	}
 	// Check output value when output increase is needed
-	assert.Equal(t, float64(121), pidControl.Update(ControllerInput{
+	pidControl.Update(ControllerInput{
 		ReferenceSignal:  10,
 		ActualSignal:     0,
 		SamplingInterval: 100 * time.Millisecond,
-	}))
-	// Check proportional error
+	})
+	assert.Equal(t, float64(121), pidControl.State.ControlSignal)
 	assert.Equal(t, float64(10), pidControl.State.ControlError)
 }
 
@@ -36,12 +36,12 @@ func TestSpeedControl_ControlLoop_OutputDecrease(t *testing.T) {
 		},
 	}
 	// Check output value when output value decrease is needed
-	assert.Equal(t, float64(0), pidControl.Update(ControllerInput{
+	pidControl.Update(ControllerInput{
 		ReferenceSignal:  10,
 		ActualSignal:     10,
 		SamplingInterval: 100 * time.Millisecond,
-	}))
-	// Check proportional error
+	})
+	assert.Equal(t, float64(0), pidControl.State.ControlSignal)
 	assert.Equal(t, float64(0), pidControl.State.ControlError)
 }
 

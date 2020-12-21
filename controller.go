@@ -34,11 +34,11 @@ type ControllerState struct {
 
 // ControllerInput holds the input parameters to a Controller.
 type ControllerInput struct {
-	// TODO: Document me.
+	// ReferenceSignal is the reference value for the signal to control.
 	ReferenceSignal float64
-	// TODO: Document me.
+	// ActualSignal is the actual value of the signal to control.
 	ActualSignal float64
-	// TODO: Document me.
+	// SamplingInterval is the time interval elapsed since the previous call of the controller Update method.
 	SamplingInterval time.Duration
 }
 

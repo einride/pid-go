@@ -58,15 +58,15 @@ type TrackingControllerState struct {
 
 // TrackingControllerInput holds the input parameters to a TrackingController.
 type TrackingControllerInput struct {
-	// TODO: Document me.
+	// ReferenceSignal is the reference value for the signal to control.
 	ReferenceSignal float64
-	// TODO: Document me.
+	// ActualSignal is the actual value of the signal to control.
 	ActualSignal float64
-	// TODO: Document me.
+	// FeedForwardSignal is the contribution of the feed-forward control loop in the controller output.
 	FeedForwardSignal float64
-	// TODO: Document me.
+	// AppliedControlSignal is the actual control command applied by the actuator.
 	AppliedControlSignal float64
-	// TODO: Document me.
+	// SamplingInterval is the time interval elapsed since the previous call of the controller Update method.
 	SamplingInterval time.Duration
 }
 

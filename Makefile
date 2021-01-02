@@ -16,6 +16,11 @@ include tools/goreview/rules.mk
 include tools/prettier/rules.mk
 include tools/semantic-release/rules.mk
 
+.PHONY: clean
+clean:
+	$(info [$@] removing build files...)
+	@rm -rf build
+
 .PHONY: go-mod-tidy
 go-mod-tidy:
 	$(info [$@] tidying Go module files...)
@@ -24,4 +29,5 @@ go-mod-tidy:
 .PHONY: go-test
 go-test:
 	$(info [$@] running Go tests...)
-	@go test -count 1 -cover -race ./...
+	@mkdir -p build/coverage
+	@go test -short -race -coverprofile=build/coverage/$@.txt -covermode=atomic ./...

@@ -1,5 +1,16 @@
 # PID Go
 
+[![PkgGoDev][pkg-badge]][pkg]
+[![GoReportCard][report-badge]][report]
+[![Codecov][codecov-badge]][codecov]
+
+[pkg-badge]: https://pkg.go.dev/badge/go.einride.tech/pid
+[pkg]: https://pkg.go.dev/go.einride.tech/pid
+[report-badge]: https://goreportcard.com/badge/go.einride.tech/pid
+[report]: https://goreportcard.com/report/go.einride.tech/pid
+[codecov-badge]: https://codecov.io/gh/einride/pid-go/branch/master/graph/badge.svg
+[codecov]: https://codecov.io/gh/einride/pid-go
+
 <p align="center">
   <img src="./doc/pid-go.svg" alt="logo"/>
 </p>

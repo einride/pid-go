@@ -17,5 +17,6 @@ linters:
     - nestif # allow deep nesting
     - unparam # allow constant parameters
     - goerr113 # allow "dynamic" errors
-    - gofumpt # TODO: enable when whitespace issue has been resolved
     - nlreturn # don't require blank line before return
+    - paralleltest # don't require t.Parallel() in all tests
+    - exhaustivestruct # don't require exhaustive structs

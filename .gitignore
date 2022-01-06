@@ -1,4 +1,2 @@
 .idea
-tools/*/*/
-node_modules/
-build/
+.mage/tools/

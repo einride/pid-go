@@ -1,11 +1,13 @@
-name: ci
+name: release
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+  push:
+    branches: [master]
+
+permissions: write-all
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
@@ -20,8 +22,8 @@ jobs:
       - name: Make
         run: make
 
-      - name: Report Code Coverage
-        uses: codecov/codecov-action@v2.1.0
+      - name: Release
+        uses: go-semantic-release/action@v1.15.0
         with:
-          file: .mage/tools/go/coverage/go-test.txt
-          fail_ci_if_error: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-initial-development-versions: true

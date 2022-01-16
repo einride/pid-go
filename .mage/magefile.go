@@ -9,6 +9,9 @@ import (
 	"go.einride.tech/mage-tools/mgpath"
 
 	// mage:import
+	"go.einride.tech/mage-tools/targets/mgyamlfmt"
+
+	// mage:import
 	"go.einride.tech/mage-tools/targets/mgconvco"
 
 	// mage:import
@@ -43,6 +46,7 @@ func All() {
 		mggoreview.Goreview,
 		mggo.GoTest,
 		mgmarkdownfmt.FormatMarkdown,
+		mgyamlfmt.FormatYaml,
 	)
 	mg.SerialDeps(
 		mggo.GoModTidy,

@@ -23,5 +23,5 @@ jobs:
       - name: Report Code Coverage
         uses: codecov/codecov-action@v2.1.0
         with:
-          file: .mage/tools/go/coverage/go-test.txt
+          file: .sage/tools/go/coverage/go-test.txt
           fail_ci_if_error: true

@@ -5,17 +5,11 @@ on:
     types: [opened, reopened, synchronize]
 
 jobs:
-  build:
+  make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v2.2.0
-        with:
-          go-version: ^1.17
+      - name: Setup Sage
+        uses: einride/sage/actions/setup@master
 
       - name: Make
         run: make
@@ -23,5 +17,5 @@ jobs:
       - name: Report Code Coverage
         uses: codecov/codecov-action@v2.1.0
         with:
-          file: .sage/tools/go/coverage/go-test.txt
+          file: .sage/build/go/coverage/go-test.txt
           fail_ci_if_error: true

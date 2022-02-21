@@ -48,10 +48,9 @@ func (c *Controller) Update(input ControllerInput) {
 	c.State.ControlError = input.ReferenceSignal - input.ActualSignal
 	c.State.ControlErrorDerivative = (c.State.ControlError - previousError) / input.SamplingInterval.Seconds()
 	c.State.ControlErrorIntegral += c.State.ControlError * input.SamplingInterval.Seconds()
-	c.State.ControlSignal =
-		c.Config.ProportionalGain*c.State.ControlError +
-			c.Config.IntegralGain*c.State.ControlErrorIntegral +
-			c.Config.DerivativeGain*c.State.ControlErrorDerivative
+	c.State.ControlSignal = c.Config.ProportionalGain*c.State.ControlError +
+		c.Config.IntegralGain*c.State.ControlErrorIntegral +
+		c.Config.DerivativeGain*c.State.ControlErrorDerivative
 }
 
 // Reset the controller state.

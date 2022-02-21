@@ -85,9 +85,8 @@ func (c *TrackingController) Update(input TrackingControllerInput) {
 		c.Config.DerivativeGain*controlErrorDerivative + input.FeedForwardSignal
 	c.State.UnsaturatedControlSignal = u
 	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
-	c.State.ControlErrorIntegrand =
-		e + c.Config.AntiWindUpGain*(input.AppliedControlSignal-
-			c.State.UnsaturatedControlSignal)
+	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(input.AppliedControlSignal-
+		c.State.UnsaturatedControlSignal)
 	c.State.ControlErrorIntegral = controlErrorIntegral
 	c.State.ControlErrorDerivative = controlErrorDerivative
 	c.State.ControlError = e

@@ -5,12 +5,13 @@
 
 sagefile := .sage/bin/sagefile
 
-.PHONY: $(sagefile)
-$(sagefile):
+$(sagefile): .sage/go.mod .sage/*.go
 	@cd .sage && go mod tidy && go run .
 
 .PHONY: sage
-sage: $(sagefile)
+sage:
+	@git clean -fxq $(sagefile)
+	@$(MAKE) $(sagefile)
 
 .PHONY: update-sage
 update-sage:

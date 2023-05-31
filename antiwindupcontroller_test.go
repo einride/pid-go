@@ -177,6 +177,59 @@ func TestAntiWindupPID_FFUpdate(t *testing.T) {
 	}
 }
 
+func TestAntiWindupPID_NaN(t *testing.T) {
+	// Given a saturated I controller with a low AntiWindUpGain
+	c := &AntiWindupController{
+		Config: AntiWindupControllerConfig{
+			LowPassTimeConstant:           1 * time.Second,
+			IntegralGain:                  10,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
+			AntiWindUpGain:                0.01,
+		},
+	}
+	for _, tt := range []struct {
+		input         AntiWindupControllerInput
+		expectedState AntiWindupControllerState
+	}{
+		{
+			// Negative faulty measurement
+			input: AntiWindupControllerInput{
+				ReferenceSignal:   5.0,
+				ActualSignal:      -math.MaxFloat64,
+				FeedForwardSignal: 2.0,
+				SamplingInterval:  dtTest,
+			},
+		},
+		{
+			// Positive faulty measurement
+			input: AntiWindupControllerInput{
+				ReferenceSignal:   5.0,
+				ActualSignal:      math.MaxFloat64,
+				FeedForwardSignal: 2.0,
+				SamplingInterval:  dtTest,
+			},
+		},
+	} {
+		tt := tt
+		// When enough iterations have passed
+		c.Reset()
+		for i := 0; i < 220; i++ {
+			c.Update(AntiWindupControllerInput{
+				ReferenceSignal:   tt.input.ReferenceSignal,
+				ActualSignal:      tt.input.ActualSignal,
+				FeedForwardSignal: tt.input.FeedForwardSignal,
+				SamplingInterval:  tt.input.SamplingInterval,
+			})
+		}
+		// Then
+		assert.Assert(t, !math.IsNaN(c.State.UnsaturatedControlSignal))
+		assert.Assert(t, !math.IsNaN(c.State.ControlSignal))
+		assert.Assert(t, !math.IsNaN(c.State.ControlErrorIntegral))
+	}
+}
+
 func TestAntiWindupController_Reset(t *testing.T) {
 	// Given a AntiWindupPIDController with stored values not equal to 0
 	c := &AntiWindupController{}

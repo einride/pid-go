@@ -81,10 +81,9 @@ func (c *TrackingController) Update(input TrackingControllerInput) {
 	controlErrorIntegral := c.State.ControlErrorIntegrand*input.SamplingInterval.Seconds() + c.State.ControlErrorIntegral
 	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
 		c.State.ControlErrorDerivative) / (input.SamplingInterval.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
-	u := e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +
+	c.State.UnsaturatedControlSignal = e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +
 		c.Config.DerivativeGain*controlErrorDerivative + input.FeedForwardSignal
-	c.State.UnsaturatedControlSignal = u
-	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
+	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, c.State.UnsaturatedControlSignal))
 	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(input.AppliedControlSignal-
 		c.State.UnsaturatedControlSignal)
 	c.State.ControlErrorIntegral = controlErrorIntegral

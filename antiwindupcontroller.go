@@ -11,6 +11,9 @@ import (
 // The anti-windup mechanism uses an actuator saturation model as defined in Chapter 6 of Åström and Murray,
 // Feedback Systems: An Introduction to Scientists and Engineers, 2008
 // (http://www.cds.caltech.edu/~murray/amwiki)
+//
+// The ControlError, ControlErrorIntegrand, ControlErrorIntegral and ControlErrorDerivative are prevented
+// from reaching +/- inf by clamping them to [-math.MaxFloat64, math.MaxFloat64].
 type AntiWindupController struct {
 	// Config for the AntiWindupController.
 	Config AntiWindupControllerConfig
@@ -79,9 +82,10 @@ func (c *AntiWindupController) Update(input AntiWindupControllerInput) {
 		c.Config.DerivativeGain*controlErrorDerivative + input.FeedForwardSignal
 	c.State.ControlSignal = math.Max(c.Config.MinOutput, math.Min(c.Config.MaxOutput, u))
 	c.State.ControlErrorIntegrand = e + c.Config.AntiWindUpGain*(c.State.ControlSignal-u)
-	c.State.ControlErrorIntegral = controlErrorIntegral
-	c.State.ControlErrorDerivative = controlErrorDerivative
-	c.State.ControlError = e
+	c.State.ControlErrorIntegrand = math.Max(-math.MaxFloat64, math.Min(math.MaxFloat64, c.State.ControlErrorIntegrand))
+	c.State.ControlErrorIntegral = math.Max(-math.MaxFloat64, math.Min(math.MaxFloat64, controlErrorIntegral))
+	c.State.ControlErrorDerivative = math.Max(-math.MaxFloat64, math.Min(math.MaxFloat64, controlErrorDerivative))
+	c.State.ControlError = math.Max(-math.MaxFloat64, math.Min(math.MaxFloat64, e))
 }
 
 // DischargeIntegral provides the ability to discharge the controller integral state

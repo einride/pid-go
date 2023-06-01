@@ -1,6 +1,7 @@
 package pid
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -75,6 +76,59 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 		// Then the controller state should be the expected
 		assert.Equal(t, tt.expectedState, c.State)
 		c.Reset()
+	}
+}
+
+func TestTrackingController_NaN(t *testing.T) {
+	// Given a saturated I controller with a low AntiWindUpGain
+	c := &TrackingController{
+		Config: TrackingControllerConfig{
+			LowPassTimeConstant:           1 * time.Second,
+			IntegralGain:                  10,
+			IntegralDischargeTimeConstant: 10,
+			MinOutput:                     -10,
+			MaxOutput:                     10,
+			AntiWindUpGain:                0.01,
+		},
+	}
+	for _, tt := range []struct {
+		input         TrackingControllerInput
+		expectedState TrackingControllerState
+	}{
+		{
+			// Negative faulty measurement
+			input: TrackingControllerInput{
+				ReferenceSignal:   5.0,
+				ActualSignal:      -math.MaxFloat64,
+				FeedForwardSignal: 2.0,
+				SamplingInterval:  dtTest,
+			},
+		},
+		{
+			// Positive faulty measurement
+			input: TrackingControllerInput{
+				ReferenceSignal:   5.0,
+				ActualSignal:      math.MaxFloat64,
+				FeedForwardSignal: 2.0,
+				SamplingInterval:  dtTest,
+			},
+		},
+	} {
+		tt := tt
+		// When enough iterations have passed
+		c.Reset()
+		for i := 0; i < 220; i++ {
+			c.Update(TrackingControllerInput{
+				ReferenceSignal:   tt.input.ReferenceSignal,
+				ActualSignal:      tt.input.ActualSignal,
+				FeedForwardSignal: tt.input.FeedForwardSignal,
+				SamplingInterval:  tt.input.SamplingInterval,
+			})
+		}
+		// Then
+		assert.Assert(t, !math.IsNaN(c.State.UnsaturatedControlSignal))
+		assert.Assert(t, !math.IsNaN(c.State.ControlSignal))
+		assert.Assert(t, !math.IsNaN(c.State.ControlErrorIntegral))
 	}
 }
 

@@ -12,6 +12,9 @@ import (
 // Chapter 6 of Åström and Murray, Feedback Systems:
 // An Introduction to Scientists and Engineers, 2008
 // (http://www.cds.caltech.edu/~murray/amwiki)
+//
+// The controlErrorIntegral is prevented from reachig +/- inf
+// by clamping the error integral to [-math.MaxFloat64, math.MaxFloat64].
 type TrackingController struct {
 	// Config for the TrackingController.
 	Config TrackingControllerConfig
@@ -79,6 +82,7 @@ func (c *TrackingController) Reset() {
 func (c *TrackingController) Update(input TrackingControllerInput) {
 	e := input.ReferenceSignal - input.ActualSignal
 	controlErrorIntegral := c.State.ControlErrorIntegrand*input.SamplingInterval.Seconds() + c.State.ControlErrorIntegral
+	controlErrorIntegral = math.Max(-math.MaxFloat64, math.Min(math.MaxFloat64, controlErrorIntegral))
 	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +
 		c.State.ControlErrorDerivative) / (input.SamplingInterval.Seconds()/c.Config.LowPassTimeConstant.Seconds() + 1)
 	c.State.UnsaturatedControlSignal = e*c.Config.ProportionalGain + c.Config.IntegralGain*controlErrorIntegral +

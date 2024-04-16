@@ -19,3 +19,4 @@ jobs:
         with:
           file: .sage/build/go/coverage/go-test.txt
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -2,4 +2,4 @@ module go.einride.tech/pid/.sage
 
 go 1.19
 
-require go.einride.tech/sage v0.306.0
+require go.einride.tech/sage v0.313.0

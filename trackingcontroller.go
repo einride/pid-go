@@ -80,6 +80,10 @@ func (c *TrackingController) Reset() {
 
 // Update the controller state.
 func (c *TrackingController) Update(input TrackingControllerInput) {
+	if math.IsNaN(input.ReferenceSignal) || math.IsNaN(input.ActualSignal) ||
+		math.IsInf(input.ReferenceSignal, 0) || math.IsInf(input.ActualSignal, 0) {
+		return
+	}
 	e := input.ReferenceSignal - input.ActualSignal
 	controlErrorIntegral := c.State.ControlErrorIntegrand*input.SamplingInterval.Seconds() + c.State.ControlErrorIntegral
 	controlErrorDerivative := ((1/c.Config.LowPassTimeConstant.Seconds())*(e-c.State.ControlError) +

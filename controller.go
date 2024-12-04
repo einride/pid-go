@@ -1,6 +1,9 @@
 package pid
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 // Controller implements a basic PID controller.
 type Controller struct {
@@ -44,6 +47,12 @@ type ControllerInput struct {
 
 // Update the controller state.
 func (c *Controller) Update(input ControllerInput) {
+
+	if math.IsNaN(input.ReferenceSignal) || math.IsNaN(input.ActualSignal) ||
+		math.IsInf(input.ReferenceSignal, 0) || math.IsInf(input.ActualSignal, 0) {
+		return
+	}
+
 	previousError := c.State.ControlError
 	c.State.ControlError = input.ReferenceSignal - input.ActualSignal
 	c.State.ControlErrorDerivative = (c.State.ControlError - previousError) / input.SamplingInterval.Seconds()

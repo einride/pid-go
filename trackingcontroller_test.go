@@ -70,7 +70,6 @@ func TestTrackingController_PControllerUpdate(t *testing.T) {
 			},
 		},
 	} {
-		tt := tt
 		// When
 		c.Update(tt.input)
 		// Then the controller state should be the expected
@@ -114,10 +113,9 @@ func TestTrackingController_NaN(t *testing.T) {
 			},
 		},
 	} {
-		tt := tt
 		// When enough iterations have passed
 		c.Reset()
-		for i := 0; i < 220; i++ {
+		for range 220 {
 			c.Update(TrackingControllerInput{
 				ReferenceSignal:   tt.input.ReferenceSignal,
 				ActualSignal:      tt.input.ActualSignal,

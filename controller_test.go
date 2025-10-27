@@ -74,7 +74,6 @@ func TestSimpleController_Reset(t *testing.T) {
 }
 
 func TestNaNInput(t *testing.T) {
-
 	// Given a pidControl with reference value and update interval, dt
 	pidControl := Controller{
 		Config: ControllerConfig{
@@ -106,5 +105,4 @@ func TestNaNInput(t *testing.T) {
 	})
 	assert.Equal(t, float64(122), pidControl.State.ControlSignal)
 	assert.Equal(t, float64(11), pidControl.State.ControlError)
-
 }

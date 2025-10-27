@@ -76,7 +76,6 @@ func (c *AntiWindupController) Reset() {
 
 // Update the controller state.
 func (c *AntiWindupController) Update(input AntiWindupControllerInput) {
-
 	if math.IsNaN(input.ReferenceSignal) || math.IsNaN(input.ActualSignal) ||
 		math.IsInf(input.ReferenceSignal, 0) || math.IsInf(input.ActualSignal, 0) {
 		return

@@ -47,7 +47,6 @@ type ControllerInput struct {
 
 // Update the controller state.
 func (c *Controller) Update(input ControllerInput) {
-
 	if math.IsNaN(input.ReferenceSignal) || math.IsNaN(input.ActualSignal) ||
 		math.IsInf(input.ReferenceSignal, 0) || math.IsInf(input.ActualSignal, 0) {
 		return

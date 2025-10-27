@@ -53,7 +53,6 @@ func TestAntiWindupController_PControllerUpdate(t *testing.T) {
 			expectedControlSignal: c.Config.MinOutput,
 		},
 	} {
-		tt := tt
 		// When
 		c.Update(tt.input)
 		// Then the controller state should be the expected
@@ -93,10 +92,9 @@ func TestAntiWindupController_PIDUpdate(t *testing.T) {
 			},
 		},
 	} {
-		tt := tt
 		// When enough iterations have passed
 		c.Reset()
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			c.Update(AntiWindupControllerInput{
 				ReferenceSignal:   tt.input.ReferenceSignal,
 				ActualSignal:      c.State.ControlSignal,
@@ -157,12 +155,11 @@ func TestAntiWindupPID_FFUpdate(t *testing.T) {
 			},
 		},
 	} {
-		tt := tt
 		// When enough iterations have passed
 		c.Reset()
 		// Then the controller I state should compensate for difference between feed forward without
 		// violating saturation constraints.
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			c.Update(AntiWindupControllerInput{
 				ReferenceSignal:   tt.input.ReferenceSignal,
 				ActualSignal:      c.State.ControlSignal,
@@ -212,10 +209,9 @@ func TestAntiWindupPID_NaN(t *testing.T) {
 			},
 		},
 	} {
-		tt := tt
 		// When enough iterations have passed
 		c.Reset()
-		for i := 0; i < 220; i++ {
+		for range 220 {
 			c.Update(AntiWindupControllerInput{
 				ReferenceSignal:   tt.input.ReferenceSignal,
 				ActualSignal:      tt.input.ActualSignal,

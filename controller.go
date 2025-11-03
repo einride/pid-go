@@ -16,11 +16,11 @@ type Controller struct {
 // ControllerConfig contains configurable parameters for a Controller.
 type ControllerConfig struct {
 	// ProportionalGain determines ratio of output response to error signal.
-	ProportionalGain float64
+	ProportionalGain float64 `json:"kp"`
 	// IntegralGain determines previous error's affect on output.
-	IntegralGain float64
+	IntegralGain float64 `json:"ki"`
 	// DerivativeGain decreases the sensitivity to large reference changes.
-	DerivativeGain float64
+	DerivativeGain float64 `json:"kd"`
 }
 
 // ControllerState holds mutable state for a Controller.

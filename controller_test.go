@@ -1,6 +1,7 @@
 package pid
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -105,4 +106,20 @@ func TestNaNInput(t *testing.T) {
 	})
 	assert.Equal(t, float64(122), pidControl.State.ControlSignal)
 	assert.Equal(t, float64(11), pidControl.State.ControlError)
+}
+
+func TestControllerDeserialisation(t *testing.T) {
+	cfg := ControllerConfig{
+		ProportionalGain: 1.23,
+		IntegralGain:     1.23,
+		DerivativeGain:   1.23,
+	}
+
+	data, err := json.Marshal(cfg)
+	assert.NilError(t, err)
+
+	var controllerConfigUnserialised ControllerConfig
+	err = json.Unmarshal(data, &controllerConfigUnserialised)
+	assert.NilError(t, err)
+	assert.Equal(t, cfg, controllerConfigUnserialised)
 }
